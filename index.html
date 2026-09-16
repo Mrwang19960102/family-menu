@@ -268,6 +268,30 @@ button { font-family: inherit; }
 .footNote { font-size: 11px; color: var(--c-text-3); text-align: center; margin: 20px 0 8px; }
 .tip { font-size: 12px; color: var(--c-text-3); text-align: center; margin-top: 12px; }
 
+/* ---------- 留言板 ---------- */
+.msgInput, .msgTextarea {
+  width: 100%;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--c-text);
+  background: var(--c-bg);
+  outline: none;
+}
+.msgInput { height: 40px; margin-top: 12px; }
+.msgTextarea { min-height: 88px; margin-top: 8px; resize: none; line-height: 1.6; }
+.msgInput:focus, .msgTextarea:focus { border-color: var(--c-primary); }
+.msgMode { font-size: 11px; color: var(--c-text-3); }
+.msgMode.local { color: #FF7D00; }
+.msgCard { padding: 14px 16px; }
+.msgHead { display: flex; align-items: baseline; justify-content: space-between; }
+.msgNick { font-size: 14px; font-weight: 600; color: var(--c-primary); }
+.msgTime { font-size: 11px; color: var(--c-text-3); }
+.msgText { font-size: 14px; color: var(--c-text-2); line-height: 1.7; margin-top: 8px; word-break: break-all; }
+.msgErr { font-size: 12px; color: var(--c-fav); text-align: center; margin: 12px 0; }
+
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
   position: fixed; inset: 0;
@@ -425,6 +449,26 @@ button { font-family: inherit; }
     </div>
     <p class="footNote">收藏仅保存在当前设备浏览器，换设备不共享</p>
   </section>
+
+  <!-- 留言板 -->
+  <section id="view-msg" class="view" hidden>
+    <div class="card">
+      <div class="cardHead">
+        <span class="cardTitle">✍️ 留言</span>
+        <span class="msgMode" id="msgMode"></span>
+      </div>
+      <input class="msgInput" id="msgNick" placeholder="你的昵称" maxlength="12">
+      <textarea class="msgTextarea" id="msgText" placeholder="给家人留句话…（比如：明天想吃红烧肉）" maxlength="200"></textarea>
+      <button class="primaryBtn" id="msgSend">发表留言</button>
+      <p class="msgErr" id="msgErr" hidden></p>
+    </div>
+    <div id="msgList"></div>
+    <div class="empty" id="msgEmpty" hidden>
+      <div class="emptyEmoji">💬</div>
+      <p>还没有留言</p>
+      <p class="emptySub">来说点什么吧，家人都能看到</p>
+    </div>
+  </section>
 </main>
 
 <div class="overlay" id="overlay"></div>
@@ -452,6 +496,10 @@ button { font-family: inherit; }
   <button class="tabItem" data-tab="fav">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M12 20.5S3.5 15 3.5 9.5a4.7 4.7 0 0 1 8.5-2.8 4.7 4.7 0 0 1 8.5 2.8c0 5.5-8.5 11-8.5 11Z"/></svg>
     收藏
+  </button>
+  <button class="tabItem" data-tab="msg">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
+    留言板
   </button>
 </nav>
 
@@ -939,6 +987,109 @@ function toggleFav(dish) {
   console.log('[Fav] ' + dish + ' -> ' + (nowFav ? '收藏' : '取消'));
 }
 
+/* ================= 留言板（LeanCloud 云同步 / 未配置时本地兜底） ================= */
+var MSG_CONFIG = { appId: '', appKey: '', server: '' }; // 注册 LeanCloud 后填入 AppID / AppKey / REST API 地址
+var MSG_CLASS = 'FamilyMessage';
+var MSG_NICK_KEY = 'family-menu-nick';
+var MSG_LOCAL_KEY = 'family-menu-msgs';
+var msgCloud = !!(MSG_CONFIG.appId && MSG_CONFIG.appKey && MSG_CONFIG.server);
+var msgLoaded = false;
+
+function msgApi(path, method, body) {
+  return fetch(MSG_CONFIG.server + '/1.1/' + path, {
+    method: method,
+    headers: {
+      'X-LC-Id': MSG_CONFIG.appId,
+      'X-LC-Key': MSG_CONFIG.appKey,
+      'Content-Type': 'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function (res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  });
+}
+function fmtMsgTime(iso) {
+  var d = new Date(iso);
+  var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function escMsg(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function renderMsgList(list) {
+  $('msgEmpty').hidden = list.length > 0;
+  $('msgList').innerHTML = list.map(function (m) {
+    return '<div class="card msgCard"><div class="msgHead"><span class="msgNick">' + escMsg(m.nick)
+      + '</span><span class="msgTime">' + m.time + '</span></div><p class="msgText">' + escMsg(m.text) + '</p></div>';
+  }).join('');
+}
+function loadLocalMsgs() {
+  try { return JSON.parse(localStorage.getItem(MSG_LOCAL_KEY) || '[]'); }
+  catch (e) { console.error('[Msg] 本地留言读取失败', e); return []; }
+}
+function loadMessages(force) {
+  var mode = $('msgMode');
+  if (!msgCloud) {
+    mode.textContent = '未接通云端 · 仅存本机';
+    mode.className = 'msgMode local';
+    renderMsgList(loadLocalMsgs());
+    return;
+  }
+  mode.textContent = '云端同步中';
+  mode.className = 'msgMode';
+  if (msgLoaded && !force) return;
+  $('msgList').innerHTML = '<p class="tip">加载中…</p>';
+  msgApi('classes/' + MSG_CLASS + '?limit=50&order=-createdAt', 'GET')
+    .then(function (data) {
+      msgLoaded = true;
+      mode.textContent = '云端同步';
+      renderMsgList((data.results || []).map(function (r) {
+        return { nick: r.nick, text: r.text, time: fmtMsgTime(r.createdAt) };
+      }));
+    })
+    .catch(function (e) {
+      console.error('[Msg] 留言加载失败', e);
+      $('msgList').innerHTML = '';
+      $('msgEmpty').hidden = true;
+      $('msgErr').hidden = false;
+      $('msgErr').textContent = '留言加载失败，请检查网络或云端配置';
+    });
+}
+function sendMsg() {
+  var nick = $('msgNick').value.trim();
+  var text = $('msgText').value.trim();
+  var err = $('msgErr');
+  err.hidden = true;
+  if (!nick) { err.hidden = false; err.textContent = '请先填写昵称'; return; }
+  if (!text) { err.hidden = false; err.textContent = '留言内容不能为空'; return; }
+  try { localStorage.setItem(MSG_NICK_KEY, nick); }
+  catch (e) { console.error('[Msg] 昵称保存失败', e); }
+  if (!msgCloud) {
+    var list = loadLocalMsgs();
+    list.unshift({ nick: nick, text: text, time: fmtMsgTime(new Date().toISOString()) });
+    try { localStorage.setItem(MSG_LOCAL_KEY, JSON.stringify(list.slice(0, 50))); }
+    catch (e) { console.error('[Msg] 本地保存失败', e); }
+    $('msgText').value = '';
+    renderMsgList(list);
+    console.log('[Msg] 本地发表成功: ' + nick);
+    return;
+  }
+  $('msgSend').disabled = true;
+  msgApi('classes/' + MSG_CLASS, 'POST', { nick: nick, text: text })
+    .then(function () {
+      $('msgText').value = '';
+      loadMessages(true);
+      console.log('[Msg] 云端发表成功: ' + nick);
+    })
+    .catch(function (e) {
+      console.error('[Msg] 发表失败', e);
+      err.hidden = false;
+      err.textContent = '发表失败，请稍后重试';
+    })
+    .then(function () { $('msgSend').disabled = false; });
+}
+
 /* ================= 做法详情弹层 ================= */
 var currentSheetDish = '';
 function updateSheetFavBtn() {
@@ -1077,7 +1228,9 @@ function switchTab(tab) {
   $('view-home').hidden = tab !== 'home';
   $('view-menu').hidden = tab !== 'menu';
   $('view-fav').hidden = tab !== 'fav';
+  $('view-msg').hidden = tab !== 'msg';
   if (tab === 'fav') renderFav();
+  if (tab === 'msg') loadMessages(false);
 }
 
 /* ================= 事件绑定 ================= */
@@ -1146,6 +1299,9 @@ document.querySelector('.steppers').addEventListener('click', function (e) {
 $('drawBtn').addEventListener('click', doDraw);
 $('redrawBtn').addEventListener('click', doDraw);
 $('goMenuBtn').addEventListener('click', function () { switchTab('menu'); });
+$('msgSend').addEventListener('click', sendMsg);
+try { $('msgNick').value = localStorage.getItem(MSG_NICK_KEY) || ''; }
+catch (e) { console.error('[Msg] 昵称读取失败', e); }
 $('quickGrid').addEventListener('click', function (e) {
   var tile = e.target.closest('.quickTile');
   if (!tile) return;
