@@ -11,6 +11,8 @@
   --c-primary-light: #FFEDE6;
   --c-veg: #3E9B4F;
   --c-veg-light: #E8F6EA;
+  --c-soup: #D48806;
+  --c-soup-light: #FFF7E6;
   --c-bg: #FFF8F2;
   --c-card: #FFFFFF;
   --c-text: #1D2129;
@@ -94,6 +96,7 @@ button { font-family: inherit; }
 }
 .segBtn.active.meat { background: var(--c-primary); color: #fff; font-weight: 600; }
 .segBtn.active.veg { background: var(--c-veg); color: #fff; font-weight: 600; }
+.segBtn.active.soup { background: var(--c-soup); color: #fff; font-weight: 600; }
 
 /* 子类 tabs */
 .catTabs {
@@ -119,6 +122,7 @@ button { font-family: inherit; }
 .catTab:active { transform: scale(.95); }
 .catTab.active.meat { background: var(--c-primary-light); border-color: var(--c-primary); color: var(--c-primary); font-weight: 600; }
 .catTab.active.veg { background: var(--c-veg-light); border-color: var(--c-veg); color: var(--c-veg); font-weight: 600; }
+.catTab.active.soup { background: var(--c-soup-light); border-color: var(--c-soup); color: var(--c-soup); font-weight: 600; }
 
 /* 凉热小分类 */
 .tempRow { display: flex; gap: 8px; margin-top: 8px; }
@@ -163,6 +167,7 @@ button { font-family: inherit; }
   transition: transform .12s ease;
 }
 .chip.veg { background: var(--c-veg-light); }
+.chip.soup { background: var(--c-soup-light); }
 .chip:active { transform: scale(.92); }
 .chip.fav { border-color: var(--c-fav); }
 .chip.fav::before { content: "♥ "; color: var(--c-fav); }
@@ -201,10 +206,11 @@ button { font-family: inherit; }
 }
 .quickTile.meat { background: var(--c-primary-light); }
 .quickTile.veg { background: var(--c-veg-light); }
+.quickTile.soup { background: var(--c-soup-light); }
 .quickTile:active { transform: scale(.95); }
 .quickName { display: block; font-size: 14px; font-weight: 600; color: var(--c-text); white-space: nowrap; }
 .quickCount { display: block; font-size: 11px; color: var(--c-text-3); margin-top: 2px; }
-.steppers { display: flex; justify-content: center; gap: 16px; margin-top: 20px; }
+.steppers { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 20px; }
 .stepper {
   display: flex; align-items: center; gap: 10px;
   background: #FFF3EC;
@@ -214,6 +220,7 @@ button { font-family: inherit; }
 .stepLabel { font-size: 13px; font-weight: 600; }
 .stepLabel.meat { color: var(--c-primary); }
 .stepLabel.veg { color: var(--c-veg); }
+.stepLabel.soup { color: var(--c-soup); }
 .stepBtn {
   width: 28px; height: 28px; border-radius: 50%;
   border: 1px solid var(--c-border); background: var(--c-card);
@@ -236,6 +243,7 @@ button { font-family: inherit; }
 .resultTag { font-size: 11px; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
 .resultTag.meat { background: var(--c-primary-light); color: var(--c-primary); }
 .resultTag.veg { background: var(--c-veg-light); color: var(--c-veg); }
+.resultTag.soup { background: var(--c-soup-light); color: var(--c-soup); }
 .resultName { font-size: 22px; font-weight: 700; margin: 10px 0 12px; }
 .resultName.settle { animation: pop .3s ease; }
 .resultActions { display: flex; gap: 8px; }
@@ -344,6 +352,11 @@ button { font-family: inherit; }
     </div>
 
     <div class="card">
+      <div class="cardHead"><span class="cardTitle">分类速览</span></div>
+      <div class="quickGrid" id="quickGrid"></div>
+    </div>
+
+    <div class="card">
       <div class="cardHead">
         <span class="cardTitle">🎲 今天吃什么</span>
         <span class="catCount">让命运决定今晚菜单</span>
@@ -361,16 +374,17 @@ button { font-family: inherit; }
           <span class="stepVal" id="vegVal">1</span>
           <button class="stepBtn" data-t="veg" data-d="1" aria-label="增加素菜">+</button>
         </div>
+        <div class="stepper">
+          <span class="stepLabel soup">汤羹</span>
+          <button class="stepBtn" data-t="soup" data-d="-1" aria-label="减少汤羹">−</button>
+          <span class="stepVal" id="soupVal">0</span>
+          <button class="stepBtn" data-t="soup" data-d="1" aria-label="增加汤羹">+</button>
+        </div>
       </div>
       <button class="primaryBtn" id="drawBtn">开始抽菜</button>
       <p class="hint" id="drawHint" hidden>荤素至少选 1 道</p>
       <div id="resultBox"></div>
       <button class="ghostBtn" id="redrawBtn" hidden>重新抽</button>
-    </div>
-
-    <div class="card">
-      <div class="cardHead"><span class="cardTitle">分类速览</span></div>
-      <div class="quickGrid" id="quickGrid"></div>
     </div>
   </section>
 
@@ -453,6 +467,10 @@ var MENU = [
     { name: '蔬菜类', dishes: ['清炒油麦菜','清炒生菜','清炒上海青','清炒空心菜','清炒菠菜','清炒茼蒿','清炒西兰花','清炒花菜','清炒娃娃菜','清炒小白菜','清炒四季豆','清炒荷兰豆','酸辣土豆丝','干煸土豆条','红烧茄子','鱼香茄子','干煸豆角','手撕包菜','酸辣大白菜','蒜蓉娃娃菜','蒜蓉西兰花','蒜蓉油麦菜','香菇青菜','木耳炒山药','木耳炒白菜','木耳炒莴笋','地三鲜','干锅土豆片','干锅花菜','凉拌黄瓜'] },
     { name: '豆制品类', dishes: ['麻婆豆腐','家常豆腐','红烧豆腐','肉末烧豆腐','鱼香豆腐','香菇烧豆腐','金针菇豆腐','白菜炖豆腐','萝卜炖豆腐','海带炖豆腐','油豆腐烧肉','千张结烧肉','青椒炒千张','芹菜炒千张','韭菜炒千张','千张炒肉丝','千张结炖排骨','凉拌千张','青椒炒香干','芹菜香干','韭菜香干','香干炒肉丝','卤豆干','凉拌豆干','豆腐干炒蒜苗','豆腐干炒芹菜','油豆腐烧鸡块','油豆腐炖白菜','炸豆腐泡','豆腐泡烧牛肉','腐竹炒肉','腐竹烧排骨','凉拌腐竹','香菇腐竹','豆腐炒鸡蛋'] },
     { name: '蛋类', dishes: ['番茄炒蛋','韭菜炒蛋','青椒炒蛋','洋葱炒蛋','木耳炒蛋','黄瓜炒蛋','西葫芦炒蛋','苦瓜炒蛋','蒜苗炒蛋','芹菜炒蛋','香菇炒蛋','葱花炒蛋','小茴香炒蛋','蛏子蒸蛋','蒸水蛋','肉末蒸蛋','香菇蒸蛋','地皮鸡蛋','韭黄炒鸡蛋','丝瓜炒蛋','青椒炒荷包蛋','胡萝卜炒蛋','外婆菜炒鸡蛋','虾仁炒蛋','大葱炒鸡蛋','皮蛋豆腐','凉拌皮蛋','青椒炒皮蛋','皮蛋瘦肉粥','鸡蛋炒粉丝','鸡蛋炒木耳','鸡蛋炒年糕','鸡蛋炒豆干','鸡蛋炒西葫芦'] }
+  ]},
+  { group: '汤羹面食', theme: 'soup', cats: [
+    { name: '汤类', dishes: ['番茄蛋花汤','紫菜蛋花汤','冬瓜丸子汤','冬瓜排骨汤','菠菜猪肝汤','菌菇豆腐汤','丝瓜蛋汤','酸辣汤','蛋花汤','玉米丸子汤','番茄牛肉丸汤','白菜豆腐汤'] },
+    { name: '面食', dishes: ['葱油拌面','炸酱面','西红柿鸡蛋打卤面','牛肉面','阳春面','焖面','炝锅面','蛋炒面','麻酱凉面','红油凉面','热干面','炒米粉'] }
   ]}
 ];
 
@@ -666,7 +684,31 @@ var STEPS = {
 '鸡蛋炒木耳': ['木耳泡发焯水', '鸡蛋炒散盛出', '下木耳、黄瓜片炒1分钟', '回锅加盐炒匀'],
 '鸡蛋炒年糕': ['年糕片焯水', '鸡蛋炒散盛出', '下年糕煎至微焦', '回锅加生抽、盐、青菜炒匀'],
 '鸡蛋炒豆干': ['豆干切条', '鸡蛋炒散盛出', '下豆干、青椒炒1分钟', '回锅加盐、生抽炒匀'],
-'鸡蛋炒西葫芦': ['西葫芦切片', '鸡蛋炒散盛出', '下西葫芦炒1分钟', '回锅加盐炒匀']
+'鸡蛋炒西葫芦': ['西葫芦切片', '鸡蛋炒散盛出', '下西葫芦炒1分钟', '回锅加盐炒匀'],
+'番茄蛋花汤': ['番茄切块，鸡蛋打散', '热油炒番茄出沙', '加水煮3分钟', '淋蛋液加盐、香油撒葱花'],
+'紫菜蛋花汤': ['紫菜冲洗撕小块', '水开下紫菜煮2分钟', '淋入蛋液成蛋花', '加盐、香油撒葱花'],
+'冬瓜丸子汤': ['肉末加盐、淀粉搅上劲团丸', '冬瓜片加水煮至透明', '下丸子煮至浮起', '加盐、胡椒粉撒葱花'],
+'冬瓜排骨汤': ['排骨焯水', '加姜片炖30分钟', '下冬瓜块炖15分钟', '加盐、胡椒粉调味'],
+'菠菜猪肝汤': ['猪肝切片泡水后加淀粉腌', '菠菜焯水', '水开下姜片、猪肝煮至变色', '下菠菜加盐、香油'],
+'菌菇豆腐汤': ['菌菇切片，豆腐切条', '热油炒香菌菇', '加水下豆腐煮5分钟', '加盐、胡椒粉撒葱花'],
+'丝瓜蛋汤': ['丝瓜去皮切块，鸡蛋打散', '热油炒蛋盛出', '下丝瓜炒透加水煮开', '回蛋加盐、香油'],
+'酸辣汤': ['豆腐、笋丝、香菇切丝', '高汤煮开下配料加生抽、醋', '勾薄芡', '加白胡椒、香油撒葱花'],
+'蛋花汤': ['水开加盐、几滴醋', '缓缓淋入蛋液成蛋花', '关火淋香油', '撒葱花或香菜'],
+'玉米丸子汤': ['肉末加盐、淀粉搅上劲团丸', '玉米粒加水煮5分钟', '下丸子煮至浮起', '加盐、胡椒粉撒葱花'],
+'番茄牛肉丸汤': ['牛肉末加盐、淀粉搅上劲', '番茄炒出沙加水煮开', '挤入牛肉丸煮至浮起', '加盐、胡椒粉撒香菜'],
+'白菜豆腐汤': ['白菜切丝，豆腐切块', '热油炒软白菜', '加水下豆腐煮5分钟', '加盐、胡椒粉撒葱花'],
+'葱油拌面': ['面条煮熟过凉水', '小葱段冷油慢炸至焦香成葱油', '生抽、老抽、糖调汁烧香', '面拌汁，盖葱段'],
+'炸酱面': ['肉末加豆瓣酱炒香成酱', '面条煮熟过水', '盖酱加黄瓜丝', '拌匀，可加蒜'],
+'西红柿鸡蛋打卤面': ['番茄、鸡蛋炒香', '加水加生抽、盐成卤', '勾薄芡', '浇在煮好的面上'],
+'牛肉面': ['牛腩炖软留汤', '面条煮熟入碗', '浇牛腩和汤', '加青菜、葱花、香菜'],
+'阳春面': ['碗中放生抽、猪油、葱花', '冲入热汤', '面条煮熟入碗', '拌匀即食'],
+'焖面': ['五花肉炒香下豆角、土豆', '加水加生抽、盐成汤', '面条铺菜上盖盖焖15分钟', '拌匀淋蒜汁'],
+'炝锅面': ['白菜丝、葱花热油炝香', '加水加生抽煮开', '下面条煮熟', '淋醋、香油撒葱花'],
+'蛋炒面': ['面条煮八成熟过凉', '鸡蛋炒散盛出', '下配菜、面、蛋', '加生抽、盐大火炒香'],
+'麻酱凉面': ['面条煮熟过凉水', '芝麻酱加水懈开加生抽、醋、糖、蒜', '酱汁浇面上', '加黄瓜丝拌匀'],
+'红油凉面': ['面条煮熟过凉水', '调汁：生抽、醋、糖、蒜、辣椒油', '浇汁', '加黄瓜丝、花生碎拌匀'],
+'热干面': ['面条煮熟过凉拌香油', '芝麻酱懈开配酸豆角、萝卜干', '面拌酱', '撒葱花淋辣椒油'],
+'炒米粉': ['米粉泡软', '热油炒香肉丝、蔬菜', '下米粉加生抽', '大火炒匀出锅']
 };
 
 /* ================= 每日吃饭寄语（按日期轮换，风格多变） ================= */
@@ -711,7 +753,7 @@ var QUOTES = [
 
 /* ================= 状态 ================= */
 var state = { tab: 'home', group: 0, cat: 0, kw: '', temp: 'all' };
-var pickCount = { meat: 1, veg: 1 };
+var pickCount = { meat: 1, veg: 1, soup: 0 };
 var results = []; // [{ dish, cat, theme }]
 
 var FAV_KEY = 'family-menu-favs';
@@ -735,7 +777,7 @@ var TOTAL = MENU.reduce(function (s, g) {
 }, 0);
 
 /* 凉菜清单（其余为热菜） */
-var COLD_DISHES = ['蒸白肉', '白切鸡', '口水鸡', '手撕鸡', '卤鸭翅', '卤鸭掌', '酱牛肉', '卤牛肉', '凉拌黄瓜', '凉拌千张', '凉拌豆干', '凉拌腐竹', '卤豆干', '皮蛋豆腐', '凉拌皮蛋'];
+var COLD_DISHES = ['蒸白肉', '白切鸡', '口水鸡', '手撕鸡', '卤鸭翅', '卤鸭掌', '酱牛肉', '卤牛肉', '凉拌黄瓜', '凉拌千张', '凉拌豆干', '凉拌腐竹', '卤豆干', '皮蛋豆腐', '凉拌皮蛋', '麻酱凉面', '红油凉面'];
 var COLD_SET = new Set(COLD_DISHES);
 function tempOf(dish) { return COLD_SET.has(dish) ? 'cold' : 'hot'; }
 
@@ -981,23 +1023,28 @@ function animateCard(idx, pool, finalDish) {
     nameEl.textContent = pool[Math.floor(Math.random() * pool.length)].dish;
   }, 80);
 }
+function poolOfTheme(theme) {
+  return theme === 'meat' ? poolOf(0) : (theme === 'veg' ? poolOf(1) : poolOf(2));
+}
 function doDraw() {
   var meatPool = poolOf(0);
   var vegPool = poolOf(1);
-  var meatPicks = pickN(meatPool, pickCount.meat, []);
-  var vegPicks = pickN(vegPool, pickCount.veg, []);
-  results = meatPicks.concat(vegPicks);
+  var soupPool = poolOf(2);
+  var picks = pickN(meatPool, pickCount.meat, [])
+    .concat(pickN(vegPool, pickCount.veg, []))
+    .concat(pickN(soupPool, pickCount.soup, []));
+  results = picks;
   $('resultBox').innerHTML = results.map(resultCardHTML).join('');
   $('redrawBtn').hidden = false;
   results.forEach(function (r, i) {
-    animateCard(i, r.theme === 'meat' ? meatPool : vegPool, r.dish);
+    animateCard(i, poolOfTheme(r.theme), r.dish);
   });
   console.log('[Draw] 结果=' + results.map(function (r) { return r.dish; }).join(','));
 }
 function swapOne(idx) {
   var r = results[idx];
   if (!r) return;
-  var groupIdx = r.theme === 'meat' ? 0 : 1;
+  var groupIdx = r.theme === 'meat' ? 0 : (r.theme === 'veg' ? 1 : 2);
   var pool = poolOf(groupIdx);
   var exclude = results.map(function (x) { return x.dish; });
   var cand = pool.filter(function (p) { return exclude.indexOf(p.dish) === -1; });
@@ -1013,11 +1060,12 @@ function swapOne(idx) {
   console.log('[Draw] 换一道 -> ' + next.dish);
 }
 function updateDrawBtn() {
-  var zero = pickCount.meat + pickCount.veg === 0;
+  var zero = pickCount.meat + pickCount.veg + pickCount.soup === 0;
   $('drawBtn').disabled = zero;
   $('drawHint').hidden = !zero;
   $('meatVal').textContent = pickCount.meat;
   $('vegVal').textContent = pickCount.veg;
+  $('soupVal').textContent = pickCount.soup;
 }
 
 /* ================= Tab 切换 ================= */
