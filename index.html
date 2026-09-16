@@ -163,11 +163,30 @@ button { font-family: inherit; }
 .searchGroupHead { font-size: 13px; font-weight: 600; color: var(--c-text-2); margin: 16px 0 8px; }
 .searchGroupHead span { color: var(--c-text-3); font-weight: 400; }
 
-/* ---------- 今天吃什么 ---------- */
-.heroCard { text-align: center; padding: 28px 16px 24px; margin-top: 12px; }
-.heroEmoji { font-size: 44px; }
-.heroCard h2 { font-size: 20px; font-weight: 700; margin-top: 8px; }
-.heroDesc { font-size: 13px; color: var(--c-text-3); margin-top: 6px; }
+/* ---------- 首页 ---------- */
+.quoteCard {
+  background: linear-gradient(135deg, #FFE3D6 0%, #FFF3EC 55%, #E8F6EA 100%);
+  margin-top: 12px;
+}
+.quoteTop { display: flex; align-items: center; justify-content: space-between; }
+.quoteDate { font-size: 12px; color: var(--c-text-2); }
+.quoteStyle {
+  font-size: 11px; padding: 3px 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, .85); color: var(--c-primary);
+  font-weight: 600; white-space: nowrap;
+}
+.quoteText { font-size: 17px; font-weight: 600; line-height: 1.8; margin-top: 12px; }
+.quickGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.quickTile {
+  border: none; border-radius: 12px;
+  padding: 12px 4px; text-align: center;
+  transition: transform .12s ease;
+}
+.quickTile.meat { background: var(--c-primary-light); }
+.quickTile.veg { background: var(--c-veg-light); }
+.quickTile:active { transform: scale(.95); }
+.quickName { display: block; font-size: 14px; font-weight: 600; color: var(--c-text); white-space: nowrap; }
+.quickCount { display: block; font-size: 11px; color: var(--c-text-3); margin-top: 2px; }
 .steppers { display: flex; justify-content: center; gap: 16px; margin-top: 20px; }
 .stepper {
   display: flex; align-items: center; gap: 10px;
@@ -297,8 +316,49 @@ button { font-family: inherit; }
 </header>
 
 <main class="main">
+  <!-- 首页 -->
+  <section id="view-home" class="view">
+    <div class="card quoteCard">
+      <div class="quoteTop">
+        <span class="quoteDate" id="quoteDate"></span>
+        <span class="quoteStyle" id="quoteStyle"></span>
+      </div>
+      <p class="quoteText" id="quoteText"></p>
+    </div>
+
+    <div class="card">
+      <div class="cardHead">
+        <span class="cardTitle">🎲 今天吃什么</span>
+        <span class="catCount">让命运决定今晚菜单</span>
+      </div>
+      <div class="steppers">
+        <div class="stepper">
+          <span class="stepLabel meat">荤菜</span>
+          <button class="stepBtn" data-t="meat" data-d="-1" aria-label="减少荤菜">−</button>
+          <span class="stepVal" id="meatVal">1</span>
+          <button class="stepBtn" data-t="meat" data-d="1" aria-label="增加荤菜">+</button>
+        </div>
+        <div class="stepper">
+          <span class="stepLabel veg">素菜</span>
+          <button class="stepBtn" data-t="veg" data-d="-1" aria-label="减少素菜">−</button>
+          <span class="stepVal" id="vegVal">1</span>
+          <button class="stepBtn" data-t="veg" data-d="1" aria-label="增加素菜">+</button>
+        </div>
+      </div>
+      <button class="primaryBtn" id="drawBtn">开始抽菜</button>
+      <p class="hint" id="drawHint" hidden>荤素至少选 1 道</p>
+      <div id="resultBox"></div>
+      <button class="ghostBtn" id="redrawBtn" hidden>重新抽</button>
+    </div>
+
+    <div class="card">
+      <div class="cardHead"><span class="cardTitle">分类速览</span></div>
+      <div class="quickGrid" id="quickGrid"></div>
+    </div>
+  </section>
+
   <!-- 菜单 -->
-  <section id="view-menu" class="view">
+  <section id="view-menu" class="view" hidden>
     <div class="searchWrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="searchInput" type="search" placeholder="搜索菜名，如「牛肉」「豆腐」" enterkeyhint="search">
@@ -319,33 +379,6 @@ button { font-family: inherit; }
     </div>
 
     <div id="searchBox" hidden></div>
-  </section>
-
-  <!-- 今天吃什么 -->
-  <section id="view-random" class="view" hidden>
-    <div class="card heroCard">
-      <div class="heroEmoji">🎲</div>
-      <h2>今天吃什么</h2>
-      <p class="heroDesc">别纠结了，让命运决定今晚吃啥</p>
-      <div class="steppers">
-        <div class="stepper">
-          <span class="stepLabel meat">荤菜</span>
-          <button class="stepBtn" data-t="meat" data-d="-1" aria-label="减少荤菜">−</button>
-          <span class="stepVal" id="meatVal">1</span>
-          <button class="stepBtn" data-t="meat" data-d="1" aria-label="增加荤菜">+</button>
-        </div>
-        <div class="stepper">
-          <span class="stepLabel veg">素菜</span>
-          <button class="stepBtn" data-t="veg" data-d="-1" aria-label="减少素菜">−</button>
-          <span class="stepVal" id="vegVal">1</span>
-          <button class="stepBtn" data-t="veg" data-d="1" aria-label="增加素菜">+</button>
-        </div>
-      </div>
-      <button class="primaryBtn" id="drawBtn">开始抽菜</button>
-      <p class="hint" id="drawHint" hidden>荤素至少选 1 道</p>
-    </div>
-    <div id="resultBox"></div>
-    <button class="ghostBtn" id="redrawBtn" hidden>重新抽</button>
   </section>
 
   <!-- 收藏 -->
@@ -376,13 +409,13 @@ button { font-family: inherit; }
 </section>
 
 <nav class="tabbar">
-  <button class="tabItem active" data-tab="menu">
+  <button class="tabItem active" data-tab="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path class="f" d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>
+    首页
+  </button>
+  <button class="tabItem" data-tab="menu">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M5 12h14a7 7 0 0 1-14 0Z"/><path d="M9 21h6"/><path d="M12 19v2"/><path d="M9 3c0 1.5 1 1.5 1 3"/><path d="M14 3c0 1.5 1 1.5 1 3"/></svg>
     菜单
-  </button>
-  <button class="tabItem" data-tab="random">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none"/></svg>
-    今天吃什么
   </button>
   <button class="tabItem" data-tab="fav">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M12 20.5S3.5 15 3.5 9.5a4.7 4.7 0 0 1 8.5-2.8 4.7 4.7 0 0 1 8.5 2.8c0 5.5-8.5 11-8.5 11Z"/></svg>
@@ -618,8 +651,48 @@ var STEPS = {
 '鸡蛋炒西葫芦': ['西葫芦切片', '鸡蛋炒散盛出', '下西葫芦炒1分钟', '回锅加盐炒匀']
 };
 
+/* ================= 每日吃饭寄语（按日期轮换，风格多变） ================= */
+var QUOTES = [
+  { t: '温馨', s: '再忙的一天，也要好好吃饭。' },
+  { t: '幽默', s: '今天吃什么，是人类永恒的哲学问题——交给命运吧。' },
+  { t: '文艺', s: '人间烟火气，最抚凡人心；一碗热汤，可抵岁月漫长。' },
+  { t: '治愈', s: '把三餐认真对待，生活也会认真待你。' },
+  { t: '接地气', s: '别纠结了，抽到啥就做啥！' },
+  { t: '哲思', s: '生活的答案，往往藏在一日三餐里。' },
+  { t: '温馨', s: '家里亮着的厨房灯，是最朴实的情书。' },
+  { t: '幽默', s: '肚子已经提交申请了，请尽快批复。' },
+  { t: '文艺', s: '一荤一素，一汤一饭，四季三餐，皆是值得。' },
+  { t: '治愈', s: '吃饱睡好，明天的烦恼明天再说。' },
+  { t: '接地气', s: '菜单定下来，一天的大事就解决了一半。' },
+  { t: '哲思', s: '认真吃饭，是一种修行。' },
+  { t: '温馨', s: '有人问你吃什么，就是有人想着你。' },
+  { t: '幽默', s: '卡路里是明天的事，今天的快乐先安排上。' },
+  { t: '文艺', s: '把日子慢火细炖，把生活加盐调味。' },
+  { t: '治愈', s: '一碗热饭，能接住你所有的疲惫。' },
+  { t: '接地气', s: '荤素搭配，干活不累。' },
+  { t: '哲思', s: '家的味道，是一切味道的原点。' },
+  { t: '温馨', s: '不管多晚回家，桌上总有一菜一汤是热的。' },
+  { t: '幽默', s: '抽菜靠手气，吃饭靠口福，今天你两样都有。' },
+  { t: '文艺', s: '葱姜蒜末里，藏着春夏秋冬。' },
+  { t: '治愈', s: '好好吃饭的人，运气都不会太差。' },
+  { t: '接地气', s: '吃顿好的，全家不吵。' },
+  { t: '哲思', s: '会吃的人，才懂生活会过。' },
+  { t: '温馨', s: '一日三餐，是家人之间最朴素的浪漫。' },
+  { t: '幽默', s: '温馨提示：浏览本菜单可能引起强烈饥饿感。' },
+  { t: '文艺', s: '锅碗瓢盆的碰撞声，是家的交响乐。' },
+  { t: '治愈', s: '慢慢吃，别着急，世界又不会跑。' },
+  { t: '接地气', s: '今天抽中的菜，就是今晚的 KPI。' },
+  { t: '哲思', s: '把每一顿饭菜做好，是对食材最大的尊重。' },
+  { t: '温馨', s: '一桌人围坐，就是整个世界。' },
+  { t: '幽默', s: '吃饭的灵魂已就位，请身体尽快配合动筷。' },
+  { t: '文艺', s: '一灶烟火，两袖家温。' },
+  { t: '治愈', s: '好饭不怕晚，好事不怕慢。' },
+  { t: '接地气', s: '早点定菜单，饭点不打架。' },
+  { t: '哲思', s: '味道的深度，就是生活的深度。' }
+];
+
 /* ================= 状态 ================= */
-var state = { tab: 'menu', group: 0, cat: 0, kw: '' };
+var state = { tab: 'home', group: 0, cat: 0, kw: '' };
 var pickCount = { meat: 1, veg: 1 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -653,6 +726,28 @@ MENU.forEach(function (g) {
 
 function $(id) { return document.getElementById(id); }
 function themeOf(groupIdx) { return MENU[groupIdx].theme; }
+
+/* ================= 渲染：首页 ================= */
+function renderQuote() {
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+  var week = '日一二三四五六'.charAt(now.getDay());
+  $('quoteDate').textContent = y + '年' + m + '月' + d + '日 · 周' + week;
+  var idx = (y * 372 + m * 31 + d) % QUOTES.length;
+  var q = QUOTES[idx];
+  $('quoteStyle').textContent = q.t;
+  $('quoteText').textContent = q.s;
+  console.log('[Quote] ' + y + '-' + m + '-' + d + ' idx=' + idx + ' 风格=' + q.t);
+}
+function renderQuickGrid() {
+  $('quickGrid').innerHTML = MENU.map(function (g, gi) {
+    return g.cats.map(function (c, ci) {
+      return '<button class="quickTile ' + g.theme + '" data-group="' + gi + '" data-cat="' + ci + '">'
+        + '<span class="quickName">' + c.name + '</span>'
+        + '<span class="quickCount">' + c.dishes.length + ' 道</span></button>';
+    }).join('');
+  }).join('');
+}
 
 /* ================= 渲染：菜单页 ================= */
 function chipHTML(dish, theme) {
@@ -885,8 +980,8 @@ function switchTab(tab) {
   document.querySelectorAll('.tabItem').forEach(function (el) {
     el.classList.toggle('active', el.getAttribute('data-tab') === tab);
   });
+  $('view-home').hidden = tab !== 'home';
   $('view-menu').hidden = tab !== 'menu';
-  $('view-random').hidden = tab !== 'random';
   $('view-fav').hidden = tab !== 'fav';
   if (tab === 'fav') renderFav();
 }
@@ -948,9 +1043,23 @@ document.querySelector('.steppers').addEventListener('click', function (e) {
 $('drawBtn').addEventListener('click', doDraw);
 $('redrawBtn').addEventListener('click', doDraw);
 $('goMenuBtn').addEventListener('click', function () { switchTab('menu'); });
+$('quickGrid').addEventListener('click', function (e) {
+  var tile = e.target.closest('.quickTile');
+  if (!tile) return;
+  state.group = Number(tile.getAttribute('data-group'));
+  state.cat = Number(tile.getAttribute('data-cat'));
+  state.kw = '';
+  $('searchInput').value = '';
+  $('searchClear').hidden = true;
+  switchTab('menu');
+  renderBrowse();
+  renderSearch();
+});
 
 /* ================= 初始化 ================= */
 updateStats();
+renderQuote();
+renderQuickGrid();
 renderBrowse();
 renderSearch();
 updateDrawBtn();
