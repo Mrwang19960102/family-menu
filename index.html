@@ -120,6 +120,23 @@ button { font-family: inherit; }
 .catTab.active.meat { background: var(--c-primary-light); border-color: var(--c-primary); color: var(--c-primary); font-weight: 600; }
 .catTab.active.veg { background: var(--c-veg-light); border-color: var(--c-veg); color: var(--c-veg); font-weight: 600; }
 
+/* 凉热小分类 */
+.tempRow { display: flex; gap: 8px; margin-top: 8px; }
+.tempPill {
+  padding: 6px 14px; min-height: 32px;
+  border-radius: 999px;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-2); font-size: 12px;
+  white-space: nowrap;
+  transition: all .15s ease;
+}
+.tempPill:active { transform: scale(.95); }
+.tempPill.active { background: var(--c-primary-light); border-color: var(--c-primary); color: var(--c-primary); font-weight: 600; }
+.chip.cold::after { content: " ❄︎"; color: #1677FF; font-size: 12px; }
+.resultTag.hot { background: #FFEDE6; color: #D4380D; }
+.resultTag.cold { background: #E8F4FF; color: #1677FF; }
+
 /* 卡片 */
 .card {
   background: var(--c-card);
@@ -267,7 +284,7 @@ button { font-family: inherit; }
 .sheet.show { transform: none; }
 .sheetHead { display: flex; align-items: flex-start; justify-content: space-between; }
 .sheetTitle { font-size: 20px; font-weight: 700; }
-.sheetMeta { margin-top: 8px; }
+.sheetMeta { display: flex; gap: 8px; margin-top: 8px; }
 .sheetClose {
   flex: none; width: 28px; height: 28px;
   border: none; border-radius: 50%;
@@ -367,6 +384,7 @@ button { font-family: inherit; }
 
     <div id="browseBox">
       <div class="seg" id="groupSeg"></div>
+      <div class="tempRow" id="tempRow"></div>
       <div class="catTabs" id="catTabs"></div>
       <div class="card">
         <div class="cardHead">
@@ -400,7 +418,7 @@ button { font-family: inherit; }
   <div class="sheetHead">
     <div>
       <h3 class="sheetTitle" id="sheetTitle"></h3>
-      <div class="sheetMeta"><span class="resultTag meat" id="sheetTag"></span></div>
+      <div class="sheetMeta"><span class="resultTag meat" id="sheetTag"></span><span class="resultTag hot" id="sheetTemp"></span></div>
     </div>
     <button class="sheetClose" id="sheetClose" aria-label="关闭">×</button>
   </div>
@@ -692,7 +710,7 @@ var QUOTES = [
 ];
 
 /* ================= 状态 ================= */
-var state = { tab: 'home', group: 0, cat: 0, kw: '' };
+var state = { tab: 'home', group: 0, cat: 0, kw: '', temp: 'all' };
 var pickCount = { meat: 1, veg: 1 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -715,6 +733,11 @@ function saveFavs() {
 var TOTAL = MENU.reduce(function (s, g) {
   return s + g.cats.reduce(function (s2, c) { return s2 + c.dishes.length; }, 0);
 }, 0);
+
+/* 凉菜清单（其余为热菜） */
+var COLD_DISHES = ['蒸白肉', '白切鸡', '口水鸡', '手撕鸡', '卤鸭翅', '卤鸭掌', '酱牛肉', '卤牛肉', '凉拌黄瓜', '凉拌千张', '凉拌豆干', '凉拌腐竹', '卤豆干', '皮蛋豆腐', '凉拌皮蛋'];
+var COLD_SET = new Set(COLD_DISHES);
+function tempOf(dish) { return COLD_SET.has(dish) ? 'cold' : 'hot'; }
 
 /* 菜名 → 分类/主题 索引 */
 var DISH_META = {};
@@ -751,7 +774,20 @@ function renderQuickGrid() {
 
 /* ================= 渲染：菜单页 ================= */
 function chipHTML(dish, theme) {
-  return '<button class="chip ' + theme + (favSet.has(dish) ? ' fav' : '') + '" data-dish="' + dish + '">' + dish + '</button>';
+  return '<button class="chip ' + theme + (COLD_SET.has(dish) ? ' cold' : '') + (favSet.has(dish) ? ' fav' : '') + '" data-dish="' + dish + '">' + dish + '</button>';
+}
+
+function renderTempRow() {
+  var dishes = MENU[state.group].cats[state.cat].dishes;
+  var cold = dishes.filter(function (d) { return COLD_SET.has(d); }).length;
+  var opts = [
+    ['all', '全部 ' + dishes.length],
+    ['hot', '热菜 ' + (dishes.length - cold)],
+    ['cold', '凉菜 ' + cold]
+  ];
+  $('tempRow').innerHTML = opts.map(function (o) {
+    return '<button class="tempPill' + (state.temp === o[0] ? ' active' : '') + '" data-temp="' + o[0] + '">' + o[1] + '</button>';
+  }).join('');
 }
 
 function renderGroupSeg() {
@@ -770,13 +806,17 @@ function renderCatTabs() {
 function renderChips() {
   var g = MENU[state.group];
   var c = g.cats[state.cat];
+  var list = c.dishes.filter(function (d) { return state.temp === 'all' || tempOf(d) === state.temp; });
   $('catTitle').textContent = c.name;
-  $('catCount').textContent = c.dishes.length + ' 道';
-  $('chipBox').innerHTML = c.dishes.map(function (d) { return chipHTML(d, g.theme); }).join('');
+  $('catCount').textContent = list.length + ' 道';
+  $('chipBox').innerHTML = list.length
+    ? list.map(function (d) { return chipHTML(d, g.theme); }).join('')
+    : '<p class="tip">该分类下暂无' + (state.temp === 'cold' ? '凉' : '热') + '菜</p>';
 }
 
 function renderBrowse() {
   renderGroupSeg();
+  renderTempRow();
   renderCatTabs();
   renderChips();
 }
@@ -794,7 +834,9 @@ function renderSearch() {
   var hits = 0;
   MENU.forEach(function (g) {
     g.cats.forEach(function (c) {
-      var list = c.dishes.filter(function (d) { return d.indexOf(kw) !== -1; });
+      var list = c.dishes.filter(function (d) {
+        return d.indexOf(kw) !== -1 && (state.temp === 'all' || tempOf(d) === state.temp);
+      });
       if (!list.length) return;
       hits += list.length;
       html += '<div class="searchGroup"><div class="searchGroupHead">' + c.name + ' <span>· 命中 ' + list.length + '</span></div>'
@@ -871,6 +913,10 @@ function openDish(dish) {
   var tag = $('sheetTag');
   tag.textContent = meta.cat;
   tag.className = 'resultTag ' + meta.theme;
+  var t = tempOf(dish);
+  var tempTag = $('sheetTemp');
+  tempTag.textContent = t === 'cold' ? '凉菜' : '热菜';
+  tempTag.className = 'resultTag ' + t;
   var steps = STEPS[dish] || [];
   $('sheetSteps').innerHTML = steps.length
     ? steps.map(function (s) { return '<li>' + s + '</li>'; }).join('')
@@ -998,8 +1044,17 @@ $('catTabs').addEventListener('click', function (e) {
   var btn = e.target.closest('.catTab');
   if (!btn) return;
   state.cat = Number(btn.getAttribute('data-cat'));
+  renderTempRow();
   renderCatTabs();
   renderChips();
+});
+$('tempRow').addEventListener('click', function (e) {
+  var pill = e.target.closest('.tempPill');
+  if (!pill) return;
+  state.temp = pill.getAttribute('data-temp');
+  renderTempRow();
+  renderChips();
+  if (state.kw) renderSearch();
 });
 $('searchInput').addEventListener('input', function (e) {
   state.kw = e.target.value;
