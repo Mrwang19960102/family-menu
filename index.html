@@ -987,26 +987,38 @@ function toggleFav(dish) {
   console.log('[Fav] ' + dish + ' -> ' + (nowFav ? '收藏' : '取消'));
 }
 
-/* ================= 留言板（LeanCloud 云同步 / 未配置时本地兜底） ================= */
-var MSG_CONFIG = { appId: '', appKey: '', server: '' }; // 注册 LeanCloud 后填入 AppID / AppKey / REST API 地址
-var MSG_CLASS = 'FamilyMessage';
+/* ================= 留言板（GitHub 云同步：仓库 messages.json 即数据库） ================= */
+var MSG_GH = { user: 'Mrwang19960102', repo: 'family-menu', file: 'messages.json', token: '' }; // 填入 fine-grained PAT（仅该仓库 Contents 读写）后开放发表
 var MSG_NICK_KEY = 'family-menu-nick';
-var MSG_LOCAL_KEY = 'family-menu-msgs';
-var msgCloud = !!(MSG_CONFIG.appId && MSG_CONFIG.appKey && MSG_CONFIG.server);
-var msgLoaded = false;
+var msgCloudList = null;
 
-function msgApi(path, method, body) {
-  return fetch(MSG_CONFIG.server + '/1.1/' + path, {
-    method: method,
-    headers: {
-      'X-LC-Id': MSG_CONFIG.appId,
-      'X-LC-Key': MSG_CONFIG.appKey,
-      'Content-Type': 'application/json'
-    },
-    body: body ? JSON.stringify(body) : undefined
-  }).then(function (res) {
+function msgB64e(s) { return btoa(unescape(encodeURIComponent(s))); }
+function msgReadCloud() {
+  return fetch('https://' + MSG_GH.user + '.github.io/' + MSG_GH.repo + '/' + MSG_GH.file + '?t=' + Date.now())
+    .then(function (res) {
+      if (res.status === 404) return { messages: [] };
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function (data) { return data.messages || []; });
+}
+function msgWriteCloud(list) {
+  var api = 'https://api.github.com/repos/' + MSG_GH.user + '/' + MSG_GH.repo + '/contents/' + MSG_GH.file;
+  var headers = {
+    'Authorization': 'Bearer ' + MSG_GH.token,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+  return fetch(api, { headers: headers }).then(function (res) {
+    if (res.status === 404) return null;
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
+  }).then(function (meta) {
+    var body = { message: 'family message update', content: msgB64e(JSON.stringify({ messages: list })) };
+    if (meta && meta.sha) body.sha = meta.sha;
+    return fetch(api, { method: 'PUT', headers: headers, body: JSON.stringify(body) }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+    });
   });
 }
 function fmtMsgTime(iso) {
@@ -1024,36 +1036,36 @@ function renderMsgList(list) {
       + '</span><span class="msgTime">' + m.time + '</span></div><p class="msgText">' + escMsg(m.text) + '</p></div>';
   }).join('');
 }
-function loadLocalMsgs() {
-  try { return JSON.parse(localStorage.getItem(MSG_LOCAL_KEY) || '[]'); }
-  catch (e) { console.error('[Msg] 本地留言读取失败', e); return []; }
+function renderMsgs(list) {
+  renderMsgList(list.map(function (m) {
+    return { nick: m.nick, text: m.text, time: fmtMsgTime(m.ts) };
+  }));
 }
 function loadMessages(force) {
   var mode = $('msgMode');
-  if (!msgCloud) {
-    mode.textContent = '未接通云端 · 仅存本机';
+  var err = $('msgErr');
+  err.hidden = true;
+  if (!MSG_GH.token) {
+    mode.textContent = '未配置写入令牌 · 只读';
     mode.className = 'msgMode local';
-    renderMsgList(loadLocalMsgs());
-    return;
+  } else {
+    mode.textContent = 'GitHub 云同步';
+    mode.className = 'msgMode';
   }
-  mode.textContent = '云端同步中';
-  mode.className = 'msgMode';
-  if (msgLoaded && !force) return;
+  if (msgCloudList && !force) { renderMsgs(msgCloudList); return; }
   $('msgList').innerHTML = '<p class="tip">加载中…</p>';
-  msgApi('classes/' + MSG_CLASS + '?limit=50&order=-createdAt', 'GET')
-    .then(function (data) {
-      msgLoaded = true;
-      mode.textContent = '云端同步';
-      renderMsgList((data.results || []).map(function (r) {
-        return { nick: r.nick, text: r.text, time: fmtMsgTime(r.createdAt) };
-      }));
+  msgReadCloud()
+    .then(function (list) {
+      msgCloudList = list;
+      renderMsgs(list);
+      console.log('[Msg] 加载成功，共 ' + list.length + ' 条');
     })
     .catch(function (e) {
       console.error('[Msg] 留言加载失败', e);
       $('msgList').innerHTML = '';
       $('msgEmpty').hidden = true;
-      $('msgErr').hidden = false;
-      $('msgErr').textContent = '留言加载失败，请检查网络或云端配置';
+      err.hidden = false;
+      err.textContent = '留言加载失败，请检查网络';
     });
 }
 function sendMsg() {
@@ -1063,23 +1075,18 @@ function sendMsg() {
   err.hidden = true;
   if (!nick) { err.hidden = false; err.textContent = '请先填写昵称'; return; }
   if (!text) { err.hidden = false; err.textContent = '留言内容不能为空'; return; }
+  if (!MSG_GH.token) { err.hidden = false; err.textContent = '写入令牌未配置，当前为只读模式'; return; }
   try { localStorage.setItem(MSG_NICK_KEY, nick); }
   catch (e) { console.error('[Msg] 昵称保存失败', e); }
-  if (!msgCloud) {
-    var list = loadLocalMsgs();
-    list.unshift({ nick: nick, text: text, time: fmtMsgTime(new Date().toISOString()) });
-    try { localStorage.setItem(MSG_LOCAL_KEY, JSON.stringify(list.slice(0, 50))); }
-    catch (e) { console.error('[Msg] 本地保存失败', e); }
-    $('msgText').value = '';
-    renderMsgList(list);
-    console.log('[Msg] 本地发表成功: ' + nick);
-    return;
-  }
+  var list = (msgCloudList || []).slice();
+  list.unshift({ nick: nick, text: text, ts: new Date().toISOString() });
+  list = list.slice(0, 100);
   $('msgSend').disabled = true;
-  msgApi('classes/' + MSG_CLASS, 'POST', { nick: nick, text: text })
+  msgWriteCloud(list)
     .then(function () {
       $('msgText').value = '';
-      loadMessages(true);
+      msgCloudList = list;
+      renderMsgs(list);
       console.log('[Msg] 云端发表成功: ' + nick);
     })
     .catch(function (e) {
