@@ -287,10 +287,32 @@ button { font-family: inherit; }
 .msgMode.local { color: #FF7D00; }
 .msgCard { padding: 14px 16px; }
 .msgHead { display: flex; align-items: baseline; justify-content: space-between; }
+.msgRight { display: flex; align-items: center; gap: 8px; }
 .msgNick { font-size: 14px; font-weight: 600; color: var(--c-primary); }
 .msgTime { font-size: 11px; color: var(--c-text-3); }
 .msgText { font-size: 14px; color: var(--c-text-2); line-height: 1.7; margin-top: 8px; word-break: break-all; }
 .msgErr { font-size: 12px; color: var(--c-fav); text-align: center; margin: 12px 0; }
+.msgDel { background: #FFECEC; color: var(--c-fav); }
+
+/* ---------- 成员登录 ---------- */
+.memberRow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.memberBadge {
+  font-size: 11px; padding: 3px 10px; border-radius: 999px;
+  background: var(--c-primary-light); color: var(--c-primary);
+  font-weight: 600; white-space: nowrap;
+}
+.memberBadge.admin { background: var(--c-soup-light); color: var(--c-soup); }
+.authTabs { display: flex; gap: 4px; background: #F6EDE4; border-radius: 999px; padding: 4px; margin-top: 12px; }
+.authTab { flex: 1; height: 36px; border: none; border-radius: 999px; background: transparent; color: var(--c-text-2); font-size: 14px; white-space: nowrap; }
+.authTab.active { background: var(--c-primary); color: #fff; font-weight: 600; }
+.authInput {
+  width: 100%; height: 40px; margin-top: 10px;
+  border: 1px solid var(--c-border); border-radius: 12px;
+  padding: 0 12px; font-size: 14px;
+  background: var(--c-bg); color: var(--c-text); outline: none;
+}
+.authInput:focus { border-color: var(--c-primary); }
+.authHint { font-size: 12px; color: var(--c-text-3); margin-top: 10px; line-height: 1.6; }
 
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
@@ -357,9 +379,13 @@ button { font-family: inherit; }
 <header class="header">
   <div class="headerTop">
     <div>
-      <h1 class="title">🍚 家庭菜单</h1>
-      <p class="subtitle">今天也好好吃饭</p>
-    </div>
+        <h1 class="title">🍚 家庭菜单</h1>
+        <p class="subtitle">今天也好好吃饭</p>
+        <div class="memberRow" id="memberRow" hidden>
+          <span class="memberBadge" id="memberBadge"></span>
+          <button class="miniBtn" id="logoutBtn">退出登录</button>
+        </div>
+      </div>
     <div class="statCard">共 <b id="statTotal">0</b> 道 · 已收藏 <b id="statFav">0</b></div>
   </div>
 </header>
@@ -457,9 +483,14 @@ button { font-family: inherit; }
         <span class="cardTitle">✍️ 留言</span>
         <span class="msgMode" id="msgMode"></span>
       </div>
-      <input class="msgInput" id="msgNick" placeholder="你的昵称" maxlength="12">
-      <textarea class="msgTextarea" id="msgText" placeholder="给家人留句话…（比如：明天想吃红烧肉）" maxlength="200"></textarea>
-      <button class="primaryBtn" id="msgSend">发表留言</button>
+      <div id="msgGuestZone" hidden>
+        <p class="authHint">游客只读：登录或注册家庭成员后即可留言。</p>
+        <button class="primaryBtn" id="openAuthBtn">登录 / 注册</button>
+      </div>
+      <div id="msgFormZone">
+        <textarea class="msgTextarea" id="msgText" placeholder="给家人留句话…（比如：明天想吃红烧肉）" maxlength="200"></textarea>
+        <button class="primaryBtn" id="msgSend">发表留言</button>
+      </div>
       <p class="msgErr" id="msgErr" hidden></p>
     </div>
     <div id="msgList"></div>
@@ -472,6 +503,22 @@ button { font-family: inherit; }
 </main>
 
 <div class="overlay" id="overlay"></div>
+<section class="sheet" id="authSheet" aria-label="成员登录">
+  <div class="sheetHead">
+    <div><h3 class="sheetTitle">家庭成员</h3></div>
+    <button class="sheetClose" id="authClose" aria-label="关闭">×</button>
+  </div>
+  <div class="authTabs" id="authTabs">
+    <button class="authTab active" data-auth="login">登录</button>
+    <button class="authTab" data-auth="reg">注册</button>
+  </div>
+  <input class="authInput" id="authNick" placeholder="成员昵称（如：爸爸）" maxlength="12">
+  <input class="authInput" id="authPw" type="password" placeholder="口令（至少 4 位）" maxlength="32">
+  <input class="authInput" id="authPw2" type="password" placeholder="确认口令（仅注册需要）" maxlength="32" hidden>
+  <button class="primaryBtn" id="authSubmit">登录</button>
+  <p class="msgErr" id="authErr" hidden></p>
+  <p class="authHint" id="authHint">首位注册的成员将成为管理员（可删除留言）。口令仅以 SHA-256 哈希存储，不含明文。</p>
+</section>
 <section class="sheet" id="sheet" aria-label="做法详情">
   <div class="sheetHead">
     <div>
@@ -990,37 +1037,157 @@ function toggleFav(dish) {
 /* ================= 留言板（GitHub 云同步：仓库 messages.json 即数据库） ================= */
 // 写入令牌：fine-grained PAT，仅 family-menu 仓库 Contents 读写（与婚假旅行同款权衡：内嵌页面、泄漏影响限于该仓库数据文件）
 var MSG_GH = { user: 'Mrwang19960102', repo: 'family-menu', file: 'messages.json', token: 'github_pat_' + '11AKUXBTI06ksJKSy7SVGQ_' + 'G4ZdDSnfLgMzkDxBuNK2TcHWBDcl0M78uPc0J1MKVdTEYUKC2FOPLOkwwo7' };
-var MSG_NICK_KEY = 'family-menu-nick';
 var msgCloudList = null;
 
 function msgB64e(s) { return btoa(unescape(encodeURIComponent(s))); }
-function msgReadCloud() {
-  return fetch('https://' + MSG_GH.user + '.github.io/' + MSG_GH.repo + '/' + MSG_GH.file + '?t=' + Date.now())
-    .then(function (res) {
-      if (res.status === 404) return { messages: [] };
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    })
-    .then(function (data) { return data.messages || []; });
-}
-function msgWriteCloud(list) {
-  var api = 'https://api.github.com/repos/' + MSG_GH.user + '/' + MSG_GH.repo + '/contents/' + MSG_GH.file;
-  var headers = {
+function ghHeaders() {
+  return {
     'Authorization': 'Bearer ' + MSG_GH.token,
     'Accept': 'application/vnd.github.v3+json',
     'Content-Type': 'application/json'
   };
-  return fetch(api, { headers: headers }).then(function (res) {
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  }).then(function (meta) {
-    var body = { message: 'family message update', content: msgB64e(JSON.stringify({ messages: list })) };
-    if (meta && meta.sha) body.sha = meta.sha;
-    return fetch(api, { method: 'PUT', headers: headers, body: JSON.stringify(body) }).then(function (res) {
+}
+function ghGetJson(file) {
+  return fetch('https://api.github.com/repos/' + MSG_GH.user + '/' + MSG_GH.repo + '/contents/' + file, { headers: ghHeaders() })
+    .then(function (res) {
+      if (res.status === 404) return null;
       if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function (meta) {
+      return meta ? JSON.parse(decodeURIComponent(escape(atob(meta.content)))) : null;
     });
+}
+function ghPutJson(file, obj) {
+  var api = 'https://api.github.com/repos/' + MSG_GH.user + '/' + MSG_GH.repo + '/contents/' + file;
+  function attempt(sha) {
+    var body = { message: 'update ' + file, content: msgB64e(JSON.stringify(obj)) };
+    if (sha) body.sha = sha;
+    return fetch(api, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+  }
+  function metaOf(res) { return res.status === 404 ? null : res.json(); }
+  return fetch(api, { headers: ghHeaders() }).then(metaOf)
+    .then(function (meta) { return attempt(meta && meta.sha); })
+    .then(function (res) {
+      if (res.status === 409) {
+        return fetch(api, { headers: ghHeaders() }).then(metaOf)
+          .then(function (m2) { return attempt(m2 && m2.sha); });
+      }
+      return res;
+    })
+    .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); });
+}
+function msgReadCloud() {
+  return ghGetJson(MSG_GH.file).then(function (d) { return (d && d.messages) || []; });
+}
+function msgWriteCloud(list) {
+  return ghPutJson(MSG_GH.file, { messages: list });
+}
+
+/* ================= 成员注册 / 登录（members.json 存哈希） ================= */
+var MEMBERS_FILE = 'members.json';
+var SESSION_KEY = 'family-menu-session';
+var session = null;
+try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
+catch (e) { console.error('[Auth] 会话读取失败', e); session = null; }
+var authMode = 'login';
+
+function saveSession(s) {
+  session = s;
+  try {
+    if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    else localStorage.removeItem(SESSION_KEY);
+  } catch (e) { console.error('[Auth] 会话保存失败', e); }
+  applyAuthUI();
+}
+function sha256hex(s) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function (b) {
+    return Array.from(new Uint8Array(b)).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('');
   });
+}
+function memberHash(nick, pw) { return sha256hex('fm1:' + nick + '|' + pw); }
+function openAuth() {
+  $('authErr').hidden = true;
+  $('overlay').classList.add('show');
+  $('authSheet').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeAuth() {
+  $('overlay').classList.remove('show');
+  $('authSheet').classList.remove('show');
+  if (!$('sheet').classList.contains('show')) document.body.style.overflow = '';
+}
+function setAuthMode(mode) {
+  authMode = mode;
+  document.querySelectorAll('.authTab').forEach(function (t) {
+    t.classList.toggle('active', t.getAttribute('data-auth') === mode);
+  });
+  $('authSubmit').textContent = mode === 'login' ? '登录' : '注册并登录';
+  $('authPw2').hidden = mode === 'login';
+  $('authHint').textContent = mode === 'login'
+    ? '口令仅以 SHA-256 哈希存储，不含明文。'
+    : '首位注册的成员将成为管理员（可删除留言）。口令仅以哈希存储。';
+}
+function applyAuthUI() {
+  var row = $('memberRow');
+  if (session) {
+    row.hidden = false;
+    var badge = $('memberBadge');
+    badge.textContent = session.nick + (session.role === 'admin' ? ' · 管理员' : ' · 已登录');
+    badge.className = 'memberBadge' + (session.role === 'admin' ? ' admin' : '');
+    $('msgGuestZone').hidden = true;
+    $('msgFormZone').hidden = false;
+  } else {
+    row.hidden = true;
+    $('msgGuestZone').hidden = false;
+    $('msgFormZone').hidden = true;
+  }
+  if (msgCloudList) renderMsgs(msgCloudList);
+}
+function authSubmit() {
+  var nick = $('authNick').value.trim();
+  var pw = $('authPw').value;
+  var err = $('authErr');
+  err.hidden = true;
+  if (!nick) { err.hidden = false; err.textContent = '请填写昵称'; return; }
+  if (pw.length < 4) { err.hidden = false; err.textContent = '口令至少 4 位'; return; }
+  if (authMode === 'reg' && $('authPw2').value !== pw) { err.hidden = false; err.textContent = '两次口令不一致'; return; }
+  $('authSubmit').disabled = true;
+  ghGetJson(MEMBERS_FILE)
+    .then(function (data) {
+      var members = (data && data.members) || [];
+      if (authMode === 'login') {
+        var m = null;
+        members.forEach(function (x) { if (x.nick === nick) m = x; });
+        if (!m) throw new Error('NO_MEMBER');
+        return memberHash(nick, pw).then(function (h) {
+          if (h !== m.hash) throw new Error('BAD_PW');
+          saveSession({ id: m.id, nick: m.nick, role: m.role });
+          closeAuth();
+          console.log('[Auth] 登录成功: ' + nick);
+        });
+      }
+      var exists = members.some(function (x) { return x.nick === nick; });
+      if (exists) throw new Error('DUP');
+      var role = members.length ? 'member' : 'admin';
+      return memberHash(nick, pw).then(function (h) {
+        var rec = { id: Date.now().toString(36), nick: nick, hash: h, role: role, created: new Date().toISOString() };
+        members.push(rec);
+        return ghPutJson(MEMBERS_FILE, { members: members }).then(function () {
+          saveSession({ id: rec.id, nick: rec.nick, role: rec.role });
+          closeAuth();
+          console.log('[Auth] 注册成功: ' + nick + ' (' + role + ')');
+        });
+      });
+    })
+    .catch(function (e) {
+      console.error('[Auth] 失败', e && e.message);
+      err.hidden = false;
+      err.textContent = e && e.message === 'BAD_PW' ? '口令错误'
+        : (e && e.message === 'DUP' ? '该昵称已注册，请直接登录'
+        : (e && e.message === 'NO_MEMBER' ? '未找到该成员，请先注册' : '操作失败，请稍后重试'));
+    })
+    .then(function () { $('authSubmit').disabled = false; });
 }
 function fmtMsgTime(iso) {
   var d = new Date(iso);
@@ -1033,13 +1200,16 @@ function escMsg(s) {
 function renderMsgList(list) {
   $('msgEmpty').hidden = list.length > 0;
   $('msgList').innerHTML = list.map(function (m) {
+    var del = (session && session.role === 'admin' && m.id)
+      ? '<button class="miniBtn msgDel" data-del="' + m.id + '">删除</button>' : '';
     return '<div class="card msgCard"><div class="msgHead"><span class="msgNick">' + escMsg(m.nick)
-      + '</span><span class="msgTime">' + m.time + '</span></div><p class="msgText">' + escMsg(m.text) + '</p></div>';
+      + '</span><span class="msgRight"><span class="msgTime">' + m.time + '</span>' + del
+      + '</span></div><p class="msgText">' + escMsg(m.text) + '</p></div>';
   }).join('');
 }
 function renderMsgs(list) {
   renderMsgList(list.map(function (m) {
-    return { nick: m.nick, text: m.text, time: fmtMsgTime(m.ts) };
+    return { nick: m.nick, text: m.text, time: fmtMsgTime(m.ts), id: m.id };
   }));
 }
 function loadMessages(force) {
@@ -1070,17 +1240,19 @@ function loadMessages(force) {
     });
 }
 function sendMsg() {
-  var nick = $('msgNick').value.trim();
   var text = $('msgText').value.trim();
   var err = $('msgErr');
   err.hidden = true;
-  if (!nick) { err.hidden = false; err.textContent = '请先填写昵称'; return; }
-  if (!text) { err.hidden = false; err.textContent = '留言内容不能为空'; return; }
   if (!MSG_GH.token) { err.hidden = false; err.textContent = '写入令牌未配置，当前为只读模式'; return; }
-  try { localStorage.setItem(MSG_NICK_KEY, nick); }
-  catch (e) { console.error('[Msg] 昵称保存失败', e); }
+  if (!session) { err.hidden = false; err.textContent = '请先登录或注册家庭成员再留言'; openAuth(); return; }
+  if (!text) { err.hidden = false; err.textContent = '留言内容不能为空'; return; }
   var list = (msgCloudList || []).slice();
-  list.unshift({ nick: nick, text: text, ts: new Date().toISOString() });
+  list.unshift({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    nick: session.nick,
+    text: text,
+    ts: new Date().toISOString()
+  });
   list = list.slice(0, 100);
   $('msgSend').disabled = true;
   msgWriteCloud(list)
@@ -1134,7 +1306,7 @@ function closeSheet() {
   $('sheet').classList.remove('show');
   document.body.style.overflow = '';
 }
-$('overlay').addEventListener('click', closeSheet);
+$('overlay').addEventListener('click', function () { closeSheet(); closeAuth(); });
 $('sheetClose').addEventListener('click', closeSheet);
 $('sheetFav').addEventListener('click', function () {
   if (currentSheetDish) toggleFav(currentSheetDish);
@@ -1308,8 +1480,28 @@ $('drawBtn').addEventListener('click', doDraw);
 $('redrawBtn').addEventListener('click', doDraw);
 $('goMenuBtn').addEventListener('click', function () { switchTab('menu'); });
 $('msgSend').addEventListener('click', sendMsg);
-try { $('msgNick').value = localStorage.getItem(MSG_NICK_KEY) || ''; }
-catch (e) { console.error('[Msg] 昵称读取失败', e); }
+$('openAuthBtn').addEventListener('click', openAuth);
+$('authClose').addEventListener('click', closeAuth);
+$('authTabs').addEventListener('click', function (e) {
+  var t = e.target.closest('.authTab');
+  if (t) setAuthMode(t.getAttribute('data-auth'));
+});
+$('authSubmit').addEventListener('click', authSubmit);
+$('logoutBtn').addEventListener('click', function () {
+  saveSession(null);
+  console.log('[Auth] 已退出登录');
+});
+$('msgList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-del]');
+  if (!b || !session || session.role !== 'admin') return;
+  var id = b.getAttribute('data-del');
+  var list = (msgCloudList || []).filter(function (m) { return m.id !== id; });
+  msgWriteCloud(list).then(function () {
+    msgCloudList = list;
+    renderMsgs(list);
+    console.log('[Msg] 已删除留言 ' + id);
+  }).catch(function (e2) { console.error('[Msg] 删除失败', e2); });
+});
 $('quickGrid').addEventListener('click', function (e) {
   var tile = e.target.closest('.quickTile');
   if (!tile) return;
@@ -1330,6 +1522,7 @@ renderQuickGrid();
 renderBrowse();
 renderSearch();
 updateDrawBtn();
+applyAuthUI();
 console.log('[Menu] 初始化完成，共 ' + TOTAL + ' 道菜');
 </script>
 </body>
