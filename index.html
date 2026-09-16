@@ -406,18 +406,25 @@ body.authing .tabbar, body.authing .header { display: none; }
   <section id="view-auth" class="view" hidden>
     <div class="authWrap">
       <div class="authTitle">🍚 家庭菜单</div>
-      <p class="authSub">家庭成员登录后使用 · 游客可只读浏览</p>
-      <div class="card authCard">
+      <p class="authSub">家庭成员用用户名 + 密码登录 · 游客可只读浏览</p>
+      <div class="card authCard" id="authCard">
         <div class="authTabs" id="authTabs">
           <button class="authTab active" data-auth="login">登录</button>
           <button class="authTab" data-auth="reg">注册</button>
         </div>
-        <input class="authInput" id="authNick" placeholder="成员昵称（如：爸爸）" maxlength="12">
-        <input class="authInput" id="authPw" type="password" placeholder="口令（至少 4 位）" maxlength="32">
-        <input class="authInput" id="authPw2" type="password" placeholder="确认口令（仅注册需要）" maxlength="32" hidden>
+        <input class="authInput" id="authUser" placeholder="用户名（登录用，如 baba01）" maxlength="16">
+        <input class="authInput" id="authPw" type="password" placeholder="密码（至少 4 位）" maxlength="32">
+        <input class="authInput" id="authPw2" type="password" placeholder="确认密码（仅注册需要）" maxlength="32" hidden>
         <button class="primaryBtn" id="authSubmit">登录</button>
         <p class="msgErr" id="authErr" hidden></p>
-        <p class="authHint" id="authHint">首位注册的成员将成为管理员（可删除留言）。口令仅以 SHA-256 哈希存储，不含明文。</p>
+        <p class="authHint" id="authHint">仅存储用户名与密码哈希，不含明文。首位注册的成员将成为管理员。</p>
+      </div>
+      <div class="card authCard" id="nickPanel" hidden>
+        <div class="cardHead"><span class="cardTitle">设置昵称</span></div>
+        <p class="authHint">首次登录请设置昵称：留言与徽章将展示昵称，更亲切。</p>
+        <input class="authInput" id="nickInput" placeholder="昵称（如：爸爸）" maxlength="12">
+        <button class="primaryBtn" id="nickSave">保存并进入</button>
+        <button class="guestLink" id="nickSkip">暂不设置，使用用户名 ›</button>
       </div>
       <button class="guestLink" id="guestLink">先以游客身份浏览 ›</button>
     </div>
@@ -1127,6 +1134,9 @@ function showAuthView() {
   if (state.tab !== 'auth') preAuthTab = state.tab;
   state.tab = 'auth';
   $('authErr').hidden = true;
+  $('authCard').hidden = false;
+  $('nickPanel').hidden = true;
+  $('guestLink').hidden = false;
   document.body.classList.add('authing');
   $('view-auth').hidden = false;
   $('view-home').hidden = true;
@@ -1148,15 +1158,15 @@ function setAuthMode(mode) {
   $('authSubmit').textContent = mode === 'login' ? '登录' : '注册并登录';
   $('authPw2').hidden = mode === 'login';
   $('authHint').textContent = mode === 'login'
-    ? '口令仅以 SHA-256 哈希存储，不含明文。'
-    : '首位注册的成员将成为管理员（可删除留言）。口令仅以哈希存储。';
+    ? '仅存储用户名与密码哈希，不含明文。'
+    : '首位注册的成员将成为管理员（可删除留言）。注册后首次登录可设置昵称。';
 }
 function applyAuthUI() {
   var row = $('memberRow');
   if (session) {
     row.hidden = false;
     var badge = $('memberBadge');
-    badge.textContent = session.nick + (session.role === 'admin' ? ' · 管理员' : ' · 已登录');
+    badge.textContent = displayName() + (session.role === 'admin' ? ' · 管理员' : ' · 已登录');
     badge.className = 'memberBadge' + (session.role === 'admin' ? ' admin' : '');
     $('msgGuestZone').hidden = true;
     $('msgFormZone').hidden = false;
@@ -1167,50 +1177,79 @@ function applyAuthUI() {
   }
   if (msgCloudList) renderMsgs(msgCloudList);
 }
+function displayName() { return session ? (session.nick || session.username) : ''; }
+function afterAuth() {
+  if (session.nick) { enterApp(); return; }
+  $('authCard').hidden = true;
+  $('nickPanel').hidden = false;
+  $('guestLink').hidden = true;
+  $('nickInput').value = '';
+}
 function authSubmit() {
-  var nick = $('authNick').value.trim();
+  var user = $('authUser').value.trim();
   var pw = $('authPw').value;
   var err = $('authErr');
   err.hidden = true;
-  if (!nick) { err.hidden = false; err.textContent = '请填写昵称'; return; }
-  if (pw.length < 4) { err.hidden = false; err.textContent = '口令至少 4 位'; return; }
-  if (authMode === 'reg' && $('authPw2').value !== pw) { err.hidden = false; err.textContent = '两次口令不一致'; return; }
+  if (!/^\S{2,16}$/.test(user)) { err.hidden = false; err.textContent = '用户名为 2-16 位且不含空格'; return; }
+  if (pw.length < 4) { err.hidden = false; err.textContent = '密码至少 4 位'; return; }
+  if (authMode === 'reg' && $('authPw2').value !== pw) { err.hidden = false; err.textContent = '两次密码不一致'; return; }
   $('authSubmit').disabled = true;
   ghGetJson(MEMBERS_FILE)
     .then(function (data) {
       var members = (data && data.members) || [];
       if (authMode === 'login') {
         var m = null;
-        members.forEach(function (x) { if (x.nick === nick) m = x; });
+        members.forEach(function (x) { if (x.username === user) m = x; });
         if (!m) throw new Error('NO_MEMBER');
-        return memberHash(nick, pw).then(function (h) {
+        return memberHash(user, pw).then(function (h) {
           if (h !== m.hash) throw new Error('BAD_PW');
-          saveSession({ id: m.id, nick: m.nick, role: m.role });
-          enterApp();
-          console.log('[Auth] 登录成功: ' + nick);
+          saveSession({ id: m.id, username: m.username, nick: m.nick || '', role: m.role });
+          afterAuth();
+          console.log('[Auth] 登录成功: ' + user);
         });
       }
-      var exists = members.some(function (x) { return x.nick === nick; });
+      var exists = members.some(function (x) { return x.username === user; });
       if (exists) throw new Error('DUP');
       var role = members.length ? 'member' : 'admin';
-      return memberHash(nick, pw).then(function (h) {
-        var rec = { id: Date.now().toString(36), nick: nick, hash: h, role: role, created: new Date().toISOString() };
+      return memberHash(user, pw).then(function (h) {
+        var rec = { id: Date.now().toString(36), username: user, hash: h, nick: '', role: role, created: new Date().toISOString() };
         members.push(rec);
         return ghPutJson(MEMBERS_FILE, { members: members }).then(function () {
-          saveSession({ id: rec.id, nick: rec.nick, role: rec.role });
-          enterApp();
-          console.log('[Auth] 注册成功: ' + nick + ' (' + role + ')');
+          saveSession({ id: rec.id, username: rec.username, nick: '', role: rec.role });
+          afterAuth();
+          console.log('[Auth] 注册成功: ' + user + ' (' + role + ')');
         });
       });
     })
     .catch(function (e) {
       console.error('[Auth] 失败', e && e.message);
       err.hidden = false;
-      err.textContent = e && e.message === 'BAD_PW' ? '口令错误'
-        : (e && e.message === 'DUP' ? '该昵称已注册，请直接登录'
-        : (e && e.message === 'NO_MEMBER' ? '未找到该成员，请先注册' : '操作失败，请稍后重试'));
+      err.textContent = e && e.message === 'BAD_PW' ? '密码错误'
+        : (e && e.message === 'DUP' ? '该用户名已注册，请直接登录'
+        : (e && e.message === 'NO_MEMBER' ? '未找到该用户名，请先注册' : '操作失败，请稍后重试'));
     })
     .then(function () { $('authSubmit').disabled = false; });
+}
+function nickSave() {
+  var nick = $('nickInput').value.trim();
+  if (!nick) { $('nickInput').focus(); return; }
+  $('nickSave').disabled = true;
+  ghGetJson(MEMBERS_FILE)
+    .then(function (data) {
+      var members = (data && data.members) || [];
+      var hit = false;
+      members.forEach(function (m) { if (m.id === session.id) { m.nick = nick; hit = true; } });
+      if (!hit) throw new Error('NO_MEMBER');
+      return ghPutJson(MEMBERS_FILE, { members: members });
+    })
+    .then(function () {
+      session.nick = nick;
+      saveSession(session);
+      enterApp();
+      console.log('[Auth] 昵称已设置: ' + nick);
+    })
+    .catch(function (e) { console.error('[Auth] 昵称保存失败', e); })
+    .then(function () { $('nickSave').disabled = false; });
 }
 function fmtMsgTime(iso) {
   var d = new Date(iso);
@@ -1272,7 +1311,7 @@ function sendMsg() {
   var list = (msgCloudList || []).slice();
   list.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    nick: session.nick,
+    nick: displayName(),
     text: text,
     ts: new Date().toISOString()
   });
@@ -1508,6 +1547,11 @@ $('guestLink').addEventListener('click', function () {
   enterApp();
   console.log('[Auth] 以游客身份浏览');
 });
+$('nickSave').addEventListener('click', nickSave);
+$('nickSkip').addEventListener('click', function () {
+  enterApp();
+  console.log('[Auth] 跳过昵称设置');
+});
 $('authTabs').addEventListener('click', function (e) {
   var t = e.target.closest('.authTab');
   if (t) setAuthMode(t.getAttribute('data-auth'));
@@ -1549,6 +1593,7 @@ renderQuickGrid();
 renderBrowse();
 renderSearch();
 updateDrawBtn();
+if (session && !session.username) saveSession(null); // 旧版昵称会话失效，需按用户名+密码重新登录
 applyAuthUI();
 if (!session) showAuthView();
 console.log('[Menu] 初始化完成，共 ' + TOTAL + ' 道菜');
