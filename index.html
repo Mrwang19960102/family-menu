@@ -313,6 +313,17 @@ button { font-family: inherit; }
 }
 .authInput:focus { border-color: var(--c-primary); }
 .authHint { font-size: 12px; color: var(--c-text-3); margin-top: 10px; line-height: 1.6; }
+body.authing .tabbar, body.authing .header { display: none; }
+.authWrap { padding-top: 48px; }
+.authTitle { font-size: 30px; font-weight: 700; text-align: center; letter-spacing: 1px; }
+.authSub { font-size: 12px; color: var(--c-text-3); text-align: center; margin-top: 8px; }
+.authCard { margin-top: 24px; }
+.guestLink {
+  display: block; margin: 20px auto 0;
+  background: none; border: none;
+  color: var(--c-text-3); font-size: 13px;
+  text-decoration: underline;
+}
 
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
@@ -391,6 +402,27 @@ button { font-family: inherit; }
 </header>
 
 <main class="main">
+  <!-- 注册 / 登录首屏 -->
+  <section id="view-auth" class="view" hidden>
+    <div class="authWrap">
+      <div class="authTitle">🍚 家庭菜单</div>
+      <p class="authSub">家庭成员登录后使用 · 游客可只读浏览</p>
+      <div class="card authCard">
+        <div class="authTabs" id="authTabs">
+          <button class="authTab active" data-auth="login">登录</button>
+          <button class="authTab" data-auth="reg">注册</button>
+        </div>
+        <input class="authInput" id="authNick" placeholder="成员昵称（如：爸爸）" maxlength="12">
+        <input class="authInput" id="authPw" type="password" placeholder="口令（至少 4 位）" maxlength="32">
+        <input class="authInput" id="authPw2" type="password" placeholder="确认口令（仅注册需要）" maxlength="32" hidden>
+        <button class="primaryBtn" id="authSubmit">登录</button>
+        <p class="msgErr" id="authErr" hidden></p>
+        <p class="authHint" id="authHint">首位注册的成员将成为管理员（可删除留言）。口令仅以 SHA-256 哈希存储，不含明文。</p>
+      </div>
+      <button class="guestLink" id="guestLink">先以游客身份浏览 ›</button>
+    </div>
+  </section>
+
   <!-- 首页 -->
   <section id="view-home" class="view">
     <div class="card quoteCard">
@@ -503,22 +535,6 @@ button { font-family: inherit; }
 </main>
 
 <div class="overlay" id="overlay"></div>
-<section class="sheet" id="authSheet" aria-label="成员登录">
-  <div class="sheetHead">
-    <div><h3 class="sheetTitle">家庭成员</h3></div>
-    <button class="sheetClose" id="authClose" aria-label="关闭">×</button>
-  </div>
-  <div class="authTabs" id="authTabs">
-    <button class="authTab active" data-auth="login">登录</button>
-    <button class="authTab" data-auth="reg">注册</button>
-  </div>
-  <input class="authInput" id="authNick" placeholder="成员昵称（如：爸爸）" maxlength="12">
-  <input class="authInput" id="authPw" type="password" placeholder="口令（至少 4 位）" maxlength="32">
-  <input class="authInput" id="authPw2" type="password" placeholder="确认口令（仅注册需要）" maxlength="32" hidden>
-  <button class="primaryBtn" id="authSubmit">登录</button>
-  <p class="msgErr" id="authErr" hidden></p>
-  <p class="authHint" id="authHint">首位注册的成员将成为管理员（可删除留言）。口令仅以 SHA-256 哈希存储，不含明文。</p>
-</section>
 <section class="sheet" id="sheet" aria-label="做法详情">
   <div class="sheetHead">
     <div>
@@ -1106,17 +1122,24 @@ function sha256hex(s) {
   });
 }
 function memberHash(nick, pw) { return sha256hex('fm1:' + nick + '|' + pw); }
-function openAuth() {
+var preAuthTab = 'home';
+function showAuthView() {
+  if (state.tab !== 'auth') preAuthTab = state.tab;
+  state.tab = 'auth';
   $('authErr').hidden = true;
-  $('overlay').classList.add('show');
-  $('authSheet').classList.add('show');
-  document.body.style.overflow = 'hidden';
+  document.body.classList.add('authing');
+  $('view-auth').hidden = false;
+  $('view-home').hidden = true;
+  $('view-menu').hidden = true;
+  $('view-fav').hidden = true;
+  $('view-msg').hidden = true;
 }
-function closeAuth() {
-  $('overlay').classList.remove('show');
-  $('authSheet').classList.remove('show');
-  if (!$('sheet').classList.contains('show')) document.body.style.overflow = '';
+function enterApp() {
+  document.body.classList.remove('authing');
+  $('view-auth').hidden = true;
+  switchTab(preAuthTab || 'home');
 }
+function openAuth() { showAuthView(); }
 function setAuthMode(mode) {
   authMode = mode;
   document.querySelectorAll('.authTab').forEach(function (t) {
@@ -1163,7 +1186,7 @@ function authSubmit() {
         return memberHash(nick, pw).then(function (h) {
           if (h !== m.hash) throw new Error('BAD_PW');
           saveSession({ id: m.id, nick: m.nick, role: m.role });
-          closeAuth();
+          enterApp();
           console.log('[Auth] 登录成功: ' + nick);
         });
       }
@@ -1175,7 +1198,7 @@ function authSubmit() {
         members.push(rec);
         return ghPutJson(MEMBERS_FILE, { members: members }).then(function () {
           saveSession({ id: rec.id, nick: rec.nick, role: rec.role });
-          closeAuth();
+          enterApp();
           console.log('[Auth] 注册成功: ' + nick + ' (' + role + ')');
         });
       });
@@ -1306,7 +1329,7 @@ function closeSheet() {
   $('sheet').classList.remove('show');
   document.body.style.overflow = '';
 }
-$('overlay').addEventListener('click', function () { closeSheet(); closeAuth(); });
+$('overlay').addEventListener('click', closeSheet);
 $('sheetClose').addEventListener('click', closeSheet);
 $('sheetFav').addEventListener('click', function () {
   if (currentSheetDish) toggleFav(currentSheetDish);
@@ -1481,7 +1504,10 @@ $('redrawBtn').addEventListener('click', doDraw);
 $('goMenuBtn').addEventListener('click', function () { switchTab('menu'); });
 $('msgSend').addEventListener('click', sendMsg);
 $('openAuthBtn').addEventListener('click', openAuth);
-$('authClose').addEventListener('click', closeAuth);
+$('guestLink').addEventListener('click', function () {
+  enterApp();
+  console.log('[Auth] 以游客身份浏览');
+});
 $('authTabs').addEventListener('click', function (e) {
   var t = e.target.closest('.authTab');
   if (t) setAuthMode(t.getAttribute('data-auth'));
@@ -1489,6 +1515,7 @@ $('authTabs').addEventListener('click', function (e) {
 $('authSubmit').addEventListener('click', authSubmit);
 $('logoutBtn').addEventListener('click', function () {
   saveSession(null);
+  showAuthView();
   console.log('[Auth] 已退出登录');
 });
 $('msgList').addEventListener('click', function (e) {
@@ -1523,6 +1550,7 @@ renderBrowse();
 renderSearch();
 updateDrawBtn();
 applyAuthUI();
+if (!session) showAuthView();
 console.log('[Menu] 初始化完成，共 ' + TOTAL + ' 道菜');
 </script>
 </body>
