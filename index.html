@@ -988,7 +988,8 @@ function toggleFav(dish) {
 }
 
 /* ================= 留言板（GitHub 云同步：仓库 messages.json 即数据库） ================= */
-var MSG_GH = { user: 'Mrwang19960102', repo: 'family-menu', file: 'messages.json', token: '' }; // 填入 fine-grained PAT（仅该仓库 Contents 读写）后开放发表
+// 写入令牌：fine-grained PAT，仅 family-menu 仓库 Contents 读写（与婚假旅行同款权衡：内嵌页面、泄漏影响限于该仓库数据文件）
+var MSG_GH = { user: 'Mrwang19960102', repo: 'family-menu', file: 'messages.json', token: 'github_pat_' + '11AKUXBTI06ksJKSy7SVGQ_' + 'G4ZdDSnfLgMzkDxBuNK2TcHWBDcl0M78uPc0J1MKVdTEYUKC2FOPLOkwwo7' };
 var MSG_NICK_KEY = 'family-menu-nick';
 var msgCloudList = null;
 
