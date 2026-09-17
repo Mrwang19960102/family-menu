@@ -324,6 +324,27 @@ button { font-family: inherit; }
 }
 .replyCancel { background: #EDE8E4; color: #86909C; }
 
+/* ---------- 二次确认弹窗 ---------- */
+.confirmMask {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, .45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 60; padding: 0 40px;
+}
+.confirmMask[hidden] { display: none; }
+.confirmBox {
+  width: 100%; max-width: 300px;
+  background: #fff; border-radius: 16px;
+  padding: 22px 20px 18px;
+  box-shadow: var(--shadow-float);
+  animation: pop .18s ease;
+}
+.confirmText { font-size: 14px; color: var(--c-text); text-align: center; line-height: 1.6; }
+.confirmBtns { display: flex; gap: 10px; margin-top: 18px; }
+.confirmBtn { flex: 1; height: 40px; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; }
+.confirmBtn.cancel { background: #F2F3F5; color: var(--c-text-2); }
+.confirmBtn.ok { background: var(--c-fav); color: #fff; }
+
 /* ---------- 成员登录 ---------- */
 .memberRow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .memberRow[hidden] { display: none; }
@@ -641,6 +662,15 @@ body.authing .tabbar, body.authing .header { display: none; }
 </main>
 
 <div class="overlay" id="overlay"></div>
+<div class="confirmMask" id="confirmMask" hidden>
+  <div class="confirmBox">
+    <p class="confirmText" id="confirmText"></p>
+    <div class="confirmBtns">
+      <button class="confirmBtn cancel" id="confirmCancel">取消</button>
+      <button class="confirmBtn ok" id="confirmOk">删除</button>
+    </div>
+  </div>
+</div>
 <section class="sheet" id="sheet" aria-label="做法详情">
   <div class="sheetHead">
     <div>
@@ -1433,11 +1463,14 @@ function renderMe() {
   role.className = 'memberBadge' + (session.role === 'admin' ? ' admin' : '');
   $('meMeta').textContent = '用户名：' + session.username + ' · 注册于 -';
   $('meNickInput').value = session.nick || '';
+  var sid = session.id;
+  var sname = session.username;
   ghGetJson(MEMBERS_FILE).then(function (data) {
+    if (!session || session.id !== sid) return; // 请求返回前已退出则忽略
     var members = (data && data.members) || [];
     var m = null;
-    members.forEach(function (x) { if (x.id === session.id) m = x; });
-    if (m && m.created) $('meMeta').textContent = '用户名：' + session.username + ' · 注册于 ' + m.created.slice(0, 10);
+    members.forEach(function (x) { if (x.id === sid) m = x; });
+    if (m && m.created) $('meMeta').textContent = '用户名：' + sname + ' · 注册于 ' + m.created.slice(0, 10);
   }).catch(function (e) { console.error('[Me] 成员信息读取失败', e); });
 }
 function meSetMsg(ok, text) {
@@ -1578,6 +1611,17 @@ function sendReply(msgId, text) {
     renderMsgs(list);
     console.log('[Msg] 回复成功: ' + msgId);
   }).catch(function (e) { console.error('[Msg] 回复失败', e); });
+}
+var confirmCb = null;
+function askConfirm(text, okText, onOk) {
+  confirmCb = onOk;
+  $('confirmText').textContent = text;
+  $('confirmOk').textContent = okText || '删除';
+  $('confirmMask').hidden = false;
+}
+function closeConfirm() {
+  confirmCb = null;
+  $('confirmMask').hidden = true;
 }
 function deleteReply(msgId, replyId) {
   var list = (msgCloudList || []).map(function (m) {
@@ -1876,10 +1920,11 @@ $('meLoginBtn').addEventListener('click', openAuth);
 $('meNickSave').addEventListener('click', meNickSave);
 $('mePwSave').addEventListener('click', mePwSave);
 $('meLogout').addEventListener('click', function () {
-  if (!window.confirm('确认退出当前账号？')) return;
-  saveSession(null);
-  showAuthView();
-  console.log('[Me] 已退出登录');
+  askConfirm('确认退出当前账号？', '退出', function () {
+    saveSession(null);
+    showAuthView();
+    console.log('[Me] 已退出登录');
+  });
 });
 $('nickSkip').addEventListener('click', function () {
   enterApp();
@@ -1926,7 +1971,9 @@ $('msgList').addEventListener('click', function (e) {
         if (r.id === parts[1] && (session.role === 'admin' || r.nick === displayName())) owner = true;
       });
     });
-    if (owner) deleteReply(parts[0], parts[1]);
+    if (owner) {
+      askConfirm('确认删除这条回复吗？', '删除', function () { deleteReply(parts[0], parts[1]); });
+    }
     return;
   }
   var b = e.target.closest('[data-del]');
@@ -1935,12 +1982,23 @@ $('msgList').addEventListener('click', function (e) {
   var target = null;
   (msgCloudList || []).forEach(function (m) { if (m.id === id) target = m; });
   if (!target || (session.role !== 'admin' && target.nick !== displayName())) return;
-  var list = (msgCloudList || []).filter(function (m) { return m.id !== id; });
-  msgWriteCloud(list).then(function () {
-    msgCloudList = list;
-    renderMsgs(list);
-    console.log('[Msg] 已删除留言 ' + id);
-  }).catch(function (e2) { console.error('[Msg] 删除失败', e2); });
+  askConfirm('确认删除这条留言吗？其下回复将一并删除。', '删除', function () {
+    var list = (msgCloudList || []).filter(function (m) { return m.id !== id; });
+    msgWriteCloud(list).then(function () {
+      msgCloudList = list;
+      renderMsgs(list);
+      console.log('[Msg] 已删除留言 ' + id);
+    }).catch(function (e2) { console.error('[Msg] 删除失败', e2); });
+  });
+});
+$('confirmCancel').addEventListener('click', closeConfirm);
+$('confirmMask').addEventListener('click', function (e) {
+  if (e.target === $('confirmMask')) closeConfirm();
+});
+$('confirmOk').addEventListener('click', function () {
+  var cb = confirmCb;
+  closeConfirm();
+  if (cb) cb();
 });
 $('quickGrid').addEventListener('click', function (e) {
   var tile = e.target.closest('.quickTile');
