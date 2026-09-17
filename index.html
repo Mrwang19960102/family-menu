@@ -457,7 +457,17 @@ body.authing .tabbar, body.authing .header { display: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   border: none; background: none;
   color: var(--c-text-3); font-size: 11px;
+  position: relative;
 }
+.tabBadge {
+  position: absolute; top: 6px; left: calc(50% + 8px);
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px;
+  background: var(--c-fav); color: #fff;
+  font-size: 10px; line-height: 16px; text-align: center;
+}
+.tabBadge[hidden] { display: none; }
+.msgCard.fresh, .replyItem.fresh { box-shadow: inset 3px 0 0 var(--c-primary); }
 .tabItem svg { width: 22px; height: 22px; }
 .tabItem svg .f { fill: none; }
 .tabItem.active { color: var(--c-primary); font-weight: 600; }
@@ -699,6 +709,7 @@ body.authing .tabbar, body.authing .header { display: none; }
   <button class="tabItem" data-tab="msg">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
     留言板
+    <span class="tabBadge" id="msgBadge" hidden></span>
   </button>
   <button class="tabItem" data-tab="me">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path class="f" d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6Z"/></svg>
@@ -1566,6 +1577,7 @@ function escMsg(s) {
 }
 function renderMsgList(list) {
   $('msgEmpty').hidden = list.length > 0;
+  var rt = readTs();
   $('msgList').innerHTML = list.map(function (m) {
     var canDel = session && m.id && (session.role === 'admin' || m.nick === displayName());
     var del = canDel ? '<button class="miniBtn msgDel" data-del="' + m.id + '">删除</button>' : '';
@@ -1573,14 +1585,14 @@ function renderMsgList(list) {
     var replies = (m.replies || []).map(function (r) {
       var rdel = (session && (session.role === 'admin' || r.nick === displayName()))
         ? '<button class="miniBtn msgDel" data-delr="' + m.id + '|' + r.id + '">删除</button>' : '';
-      return '<div class="replyItem"><div class="replyHead"><span class="replyNick">' + escMsg(r.nick)
+      return '<div class="replyItem' + (r.ts > rt ? ' fresh' : '') + '"><div class="replyHead"><span class="replyNick">' + escMsg(r.nick)
         + '</span><span class="msgRight"><span class="msgTime">' + fmtMsgTime(r.ts) + '</span>' + rdel
         + '</span></div><p class="replyText">' + escMsg(r.text) + '</p></div>';
     }).join('');
     var form = session
       ? '<div class="replyForm" data-rf="' + m.id + '" hidden><input class="replyInput" maxlength="200" placeholder="回复 ' + escMsg(m.nick) + '…"><button class="replySend" data-rsend="' + m.id + '">发送</button><button class="replySend replyCancel" data-rcancel="' + m.id + '">取消</button></div>'
       : '';
-    return '<div class="card msgCard"><div class="msgHead"><span class="msgNick">' + escMsg(m.nick)
+    return '<div class="card msgCard' + (m.ts && m.ts > rt ? ' fresh' : '') + '"><div class="msgHead"><span class="msgNick">' + escMsg(m.nick)
       + '</span><span class="msgRight"><span class="msgTime">' + m.time + '</span>' + rep + del
       + '</span></div><p class="msgText">' + escMsg(m.text) + '</p>'
       + (replies || form ? '<div class="replyBox">' + replies + form + '</div>' : '')
@@ -1589,7 +1601,7 @@ function renderMsgList(list) {
 }
 function renderMsgs(list) {
   renderMsgList(list.map(function (m) {
-    return { nick: m.nick, text: m.text, time: fmtMsgTime(m.ts), id: m.id, replies: m.replies || [] };
+    return { nick: m.nick, text: m.text, time: fmtMsgTime(m.ts), id: m.id, ts: m.ts, replies: m.replies || [] };
   }));
 }
 function sendReply(msgId, text) {
@@ -1609,6 +1621,8 @@ function sendReply(msgId, text) {
   msgWriteCloud(list).then(function () {
     msgCloudList = list;
     renderMsgs(list);
+    markMsgRead();
+    updateMsgBadge(list);
     console.log('[Msg] 回复成功: ' + msgId);
   }).catch(function (e) { console.error('[Msg] 回复失败', e); });
 }
@@ -1635,6 +1649,48 @@ function deleteReply(msgId, replyId) {
     console.log('[Msg] 已删除回复 ' + replyId);
   }).catch(function (e) { console.error('[Msg] 删除回复失败', e); });
 }
+/* ================= 未读提醒（站内红点，v1.18） ================= */
+var MSG_READTS_KEY = 'family-menu-msg-readts';
+function readTs() {
+  try { return localStorage.getItem(MSG_READTS_KEY) || '0'; }
+  catch (e) { return '0'; }
+}
+function markMsgRead() {
+  try { localStorage.setItem(MSG_READTS_KEY, new Date().toISOString()); }
+  catch (e) { console.error('[Msg] 阅读指针保存失败', e); }
+}
+function msgUnread(list) {
+  var rt = readTs();
+  var n = 0;
+  (list || []).forEach(function (m) {
+    if (m.ts > rt) n++;
+    (m.replies || []).forEach(function (r) { if (r.ts > rt) n++; });
+  });
+  return n;
+}
+function updateMsgBadge(list) {
+  var n = msgUnread(list);
+  var b = $('msgBadge');
+  if (n > 0) { b.hidden = false; b.textContent = n > 99 ? '99+' : String(n); }
+  else { b.hidden = true; }
+}
+function pollMessages() {
+  if (document.visibilityState !== 'visible') return;
+  msgReadCloud().then(function (list) {
+    msgCloudList = list;
+    if (state.tab === 'msg') {
+      var formOpen = !!document.querySelector('.replyForm:not([hidden])');
+      var typing = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('replyInput');
+      if (!formOpen && !typing) { renderMsgs(list); markMsgRead(); }
+    }
+    updateMsgBadge(list);
+  }).catch(function (e) { console.error('[Msg] 轮询失败', e); });
+}
+setInterval(pollMessages, 60000);
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') pollMessages();
+});
+
 function loadMessages(force) {
   var mode = $('msgMode');
   var err = $('msgErr');
@@ -1646,12 +1702,19 @@ function loadMessages(force) {
     mode.textContent = 'GitHub 云同步';
     mode.className = 'msgMode';
   }
-  if (msgCloudList && !force) { renderMsgs(msgCloudList); return; }
+  if (msgCloudList && !force) {
+    renderMsgs(msgCloudList);
+    if (state.tab === 'msg') markMsgRead();
+    updateMsgBadge(msgCloudList);
+    return;
+  }
   $('msgList').innerHTML = '<p class="tip">加载中…</p>';
   msgReadCloud()
     .then(function (list) {
       msgCloudList = list;
       renderMsgs(list);
+      if (state.tab === 'msg') markMsgRead();
+      updateMsgBadge(list);
       console.log('[Msg] 加载成功，共 ' + list.length + ' 条');
     })
     .catch(function (e) {
@@ -1683,6 +1746,8 @@ function sendMsg() {
       $('msgText').value = '';
       msgCloudList = list;
       renderMsgs(list);
+      markMsgRead();
+      updateMsgBadge(list);
       console.log('[Msg] 云端发表成功: ' + nick);
     })
     .catch(function (e) {
@@ -2023,6 +2088,7 @@ updateDrawBtn();
 if (session && !session.username) saveSession(null); // 旧版昵称会话失效，需按用户名+密码重新登录
 applyAuthUI();
 if (!session) showAuthView();
+pollMessages(); // 启动时拉一次，初始化未读红点
 console.log('[Menu] 初始化完成，共 ' + TOTAL + ' 道菜');
 </script>
 </body>
