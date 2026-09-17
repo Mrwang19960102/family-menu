@@ -13,6 +13,8 @@
   --c-veg-light: #E8F6EA;
   --c-soup: #D48806;
   --c-soup-light: #FFF7E6;
+  --c-fit: #0F9D8F;
+  --c-fit-light: #E4F6F3;
   --c-bg: #FFF8F2;
   --c-card: #FFFFFF;
   --c-text: #1D2129;
@@ -97,6 +99,7 @@ button { font-family: inherit; }
 .segBtn.active.meat { background: var(--c-primary); color: #fff; font-weight: 600; }
 .segBtn.active.veg { background: var(--c-veg); color: #fff; font-weight: 600; }
 .segBtn.active.soup { background: var(--c-soup); color: #fff; font-weight: 600; }
+.segBtn.active.fit { background: var(--c-fit); color: #fff; font-weight: 600; }
 
 /* 子类 tabs */
 .catTabs {
@@ -123,6 +126,7 @@ button { font-family: inherit; }
 .catTab.active.meat { background: var(--c-primary-light); border-color: var(--c-primary); color: var(--c-primary); font-weight: 600; }
 .catTab.active.veg { background: var(--c-veg-light); border-color: var(--c-veg); color: var(--c-veg); font-weight: 600; }
 .catTab.active.soup { background: var(--c-soup-light); border-color: var(--c-soup); color: var(--c-soup); font-weight: 600; }
+.catTab.active.fit { background: var(--c-fit-light); border-color: var(--c-fit); color: var(--c-fit); font-weight: 600; }
 
 /* 凉热小分类 */
 .tempRow { display: flex; gap: 8px; margin-top: 8px; }
@@ -168,6 +172,7 @@ button { font-family: inherit; }
 }
 .chip.veg { background: var(--c-veg-light); }
 .chip.soup { background: var(--c-soup-light); }
+.chip.fit { background: var(--c-fit-light); }
 .chip:active { transform: scale(.92); }
 .chip.fav { border-color: var(--c-fav); }
 .chip.fav::before { content: "♥ "; color: var(--c-fav); }
@@ -207,6 +212,7 @@ button { font-family: inherit; }
 .quickTile.meat { background: var(--c-primary-light); }
 .quickTile.veg { background: var(--c-veg-light); }
 .quickTile.soup { background: var(--c-soup-light); }
+.quickTile.fit { background: var(--c-fit-light); }
 .quickTile:active { transform: scale(.95); }
 .quickName { display: block; font-size: 14px; font-weight: 600; color: var(--c-text); white-space: nowrap; }
 .quickCount { display: block; font-size: 11px; color: var(--c-text-3); margin-top: 2px; }
@@ -221,6 +227,7 @@ button { font-family: inherit; }
 .stepLabel.meat { color: var(--c-primary); }
 .stepLabel.veg { color: var(--c-veg); }
 .stepLabel.soup { color: var(--c-soup); }
+.stepLabel.fit { color: var(--c-fit); }
 .stepBtn {
   width: 28px; height: 28px; border-radius: 50%;
   border: 1px solid var(--c-border); background: var(--c-card);
@@ -244,6 +251,7 @@ button { font-family: inherit; }
 .resultTag.meat { background: var(--c-primary-light); color: var(--c-primary); }
 .resultTag.veg { background: var(--c-veg-light); color: var(--c-veg); }
 .resultTag.soup { background: var(--c-soup-light); color: var(--c-soup); }
+.resultTag.fit { background: var(--c-fit-light); color: var(--c-fit); }
 .resultName { font-size: 22px; font-weight: 700; margin: 10px 0 12px; }
 .resultName.settle { animation: pop .3s ease; }
 .resultActions { display: flex; gap: 8px; }
@@ -647,7 +655,7 @@ body.authing .tabbar, body.authing .header { display: none; }
 </nav>
 
 <script>
-/* ================= 菜单数据（209 道） ================= */
+/* ================= 菜单数据（258 道） ================= */
 var MENU = [
   { group: '荤菜类', theme: 'meat', cats: [
     { name: '猪肉类', dishes: ['京酱肉丝','青椒肉丝','莴笋肉丝','木耳炒肉片','芹菜炒肉片','蒜苔炒肉','土豆炒肉丝','韭黄炒肉丝','杭椒小炒肉','回锅肉','蒸白肉','农家小炒肉','红烧肉','红烧排骨','红烧猪蹄','红烧狮子头','梅菜扣肉','粉蒸肉','酱肘子','东坡肉','黄焖排骨','闷五花肉','排骨汤','莲藕排骨','玉米排骨','萝卜排骨','海带排骨','椒盐猪蹄','爆炒猪肚','手工肉丸子','糖醋里脊','锅包肉','炸酥肉','吧子肉','香煎猪排','叉烧排骨','椒盐排骨'] },
@@ -660,12 +668,16 @@ var MENU = [
     { name: '蛋类', dishes: ['番茄炒蛋','韭菜炒蛋','青椒炒蛋','洋葱炒蛋','木耳炒蛋','黄瓜炒蛋','西葫芦炒蛋','苦瓜炒蛋','蒜苗炒蛋','芹菜炒蛋','香菇炒蛋','葱花炒蛋','小茴香炒蛋','蛏子蒸蛋','蒸水蛋','肉末蒸蛋','香菇蒸蛋','地皮鸡蛋','韭黄炒鸡蛋','丝瓜炒蛋','青椒炒荷包蛋','胡萝卜炒蛋','外婆菜炒鸡蛋','虾仁炒蛋','大葱炒鸡蛋','皮蛋豆腐','凉拌皮蛋','青椒炒皮蛋','皮蛋瘦肉粥','鸡蛋炒粉丝','鸡蛋炒木耳','鸡蛋炒年糕','鸡蛋炒豆干','鸡蛋炒西葫芦'] }
   ]},
   { group: '汤羹面食', theme: 'soup', cats: [
-    { name: '汤类', dishes: ['番茄蛋花汤','紫菜蛋花汤','冬瓜丸子汤','冬瓜排骨汤','菠菜猪肝汤','菌菇豆腐汤','丝瓜蛋汤','酸辣汤','蛋花汤','玉米丸子汤','番茄牛肉丸汤','白菜豆腐汤'] },
+    { name: '汤类', dishes: ['番茄蛋花汤','紫菜蛋花汤','冬瓜丸子汤','冬瓜排骨汤','菠菜猪肝汤','菌菇豆腐汤','丝瓜蛋汤','酸辣汤','蛋花汤','玉米丸子汤','番茄牛肉丸汤','白菜豆腐汤','莲藕排骨汤'] },
     { name: '面食', dishes: ['葱油拌面','炸酱面','西红柿鸡蛋打卤面','牛肉面','阳春面','焖面','炝锅面','蛋炒面','麻酱凉面','红油凉面','热干面','炒米粉'] }
+  ]},
+  { group: '减脂放纵', theme: 'fit', cats: [
+    { name: '减脂餐', dishes: ['香煎鸡胸肉','鸡丝凉拌沙拉','清蒸鲈鱼','白灼虾','西兰花炒虾仁','芦笋炒虾仁','白灼生菜','黄瓜拌木耳','香煎豆腐','西芹炒百合','蒸南瓜','藜麦鸡丁沙拉'] },
+    { name: '放纵餐', dishes: ['麻辣小龙虾','孜然羊肉串','脆皮炸鸡','芝士汉堡排','奶油培根意面','家庭版麻辣香锅','芝士焗红薯','蜜汁烤鸡腿','孜然鱿鱼','黄金炸虾','熔岩巧克力蛋糕','可乐排骨'] }
   ]}
 ];
 
-/* ================= 烹饪步骤（209 道） ================= */
+/* ================= 烹饪步骤（258 道） ================= */
 var STEPS = {
 '京酱肉丝': ['里脊切丝加料酒、淀粉腌10分钟', '甜面酱加糖和少许水调匀', '热油滑炒肉丝至变色', '倒酱汁翻炒裹匀，配葱丝出锅'],
 '青椒肉丝': ['肉丝加盐、淀粉抓匀腌10分钟', '青椒去籽切丝', '热油滑散肉丝盛出', '下青椒炒断生，回锅加盐炒匀'],
@@ -899,7 +911,32 @@ var STEPS = {
 '麻酱凉面': ['面条煮熟过凉水', '芝麻酱加水懈开加生抽、醋、糖、蒜', '酱汁浇面上', '加黄瓜丝拌匀'],
 '红油凉面': ['面条煮熟过凉水', '调汁：生抽、醋、糖、蒜、辣椒油', '浇汁', '加黄瓜丝、花生碎拌匀'],
 '热干面': ['面条煮熟过凉拌香油', '芝麻酱懈开配酸豆角、萝卜干', '面拌酱', '撒葱花淋辣椒油'],
-'炒米粉': ['米粉泡软', '热油炒香肉丝、蔬菜', '下米粉加生抽', '大火炒匀出锅']
+'炒米粉': ['米粉泡软', '热油炒香肉丝、蔬菜', '下米粉加生抽', '大火炒匀出锅'],
+'莲藕排骨汤': ['排骨斩块焯水捞出', '莲藕去皮切滚刀块，姜切片', '排骨、莲藕、姜入锅加足量水', '小火炖40分钟，出锅前加盐'],
+'香煎鸡胸肉': ['鸡胸肉横刀片开，加盐、黑胡椒、料酒腌20分钟', '不粘锅刷薄油烧热', '鸡胸肉中小火每面煎3分钟', '静置2分钟后切片装盘'],
+'鸡丝凉拌沙拉': ['鸡胸肉加姜葱煮熟放凉', '手撕成丝，黄瓜切丝', '蒜末、生抽、醋、少许糖调汁', '鸡丝黄瓜拌汁，撒白芝麻'],
+'清蒸鲈鱼': ['鲈鱼处理干净，两面划刀抹盐和料酒', '盘底铺姜葱，鱼身放上', '水开上锅大火蒸8分钟，倒掉盘中水', '铺葱丝，淋蒸鱼豉油和热油'],
+'白灼虾': ['鲜虾剪须洗净', '水加姜片、葱结、料酒烧开', '下虾煮至变红卷曲约2分钟', '捞出蘸生抽姜末汁'],
+'西兰花炒虾仁': ['西兰花切小朵焯水沥干', '虾仁加少许盐和淀粉腌5分钟', '蒜末爆香，下虾仁炒至变色', '加西兰花和盐翻炒均匀'],
+'芦笋炒虾仁': ['芦笋削去老根切段焯水', '虾仁加盐、料酒腌5分钟', '热油滑炒虾仁至变色盛出', '下芦笋翻炒，回锅加盐炒匀'],
+'白灼生菜': ['生菜洗净切段', '水加几滴油和盐烧开', '下生菜烫30秒捞出', '淋生抽蒜末汁'],
+'黄瓜拌木耳': ['木耳泡发焯水放凉', '黄瓜拍碎切段，蒜切末', '生抽、醋、少许糖、香油调汁', '拌匀静置10分钟入味'],
+'香煎豆腐': ['老豆腐切厚片，厨房纸吸干', '不粘锅刷薄油烧热', '豆腐中小火煎至两面金黄', '撒少许盐和葱花，或蘸酱汁'],
+'西芹炒百合': ['西芹去筋切段，百合掰瓣洗净', '百合焯水30秒捞出', '热油下西芹大火炒1分钟', '加百合和盐炒匀出锅'],
+'蒸南瓜': ['南瓜去皮去瓤切厚片', '码盘摆圈', '水开上锅蒸15分钟至软糯', '直接吃或淋少许蜂蜜'],
+'藜麦鸡丁沙拉': ['藜麦加水煮15分钟沥干', '鸡丁加盐和黑胡椒煎熟放凉', '小番茄、黄瓜切丁', '全部食材加橄榄油醋汁拌匀'],
+'麻辣小龙虾': ['小龙虾刷洗干净，去虾线', '热油下火锅底料和姜蒜炒香', '下小龙虾大火翻炒至壳红', '加啤酒焖10分钟，收汁出锅'],
+'孜然羊肉串': ['羊肉切块，加洋葱、盐、料酒腌20分钟', '肥瘦相间穿串', '烤箱220度烤10分钟翻面刷油', '撒孜然粉和辣椒面再烤3分钟'],
+'脆皮炸鸡': ['鸡块加盐、料酒、姜片腌30分钟', '裹炸鸡粉按压结实', '六成油温炸至定型捞出', '八成油温复炸至金黄酥脆'],
+'芝士汉堡排': ['肉末加洋葱碎、盐、黑胡椒摔打上劲', '整成饼状入锅煎至两面焦香', '加少许水盖盖焖3分钟', '放芝士片焖至融化'],
+'奶油培根意面': ['意面煮至弹牙捞出', '培根煎至出油焦香', '加奶油煮开，盐和黑胡椒调味', '下意面裹匀，撒芝士粉'],
+'家庭版麻辣香锅': ['丸子、蔬菜、肉类分别焯水沥干', '火锅底料加姜蒜干辣椒炒香', '下全部食材大火翻炒裹味', '撒白芝麻和香菜出锅'],
+'芝士焗红薯': ['红薯蒸熟压泥，加牛奶拌匀', '铺入烤碗，撒马苏里拉芝士', '烤箱200度烤12分钟', '至芝士表面金黄焦斑'],
+'蜜汁烤鸡腿': ['鸡腿去骨，加生抽、料酒、姜腌30分钟', '皮朝下入锅煎至金黄', '翻面刷蜂蜜水', '烤箱200度烤15分钟，切块装盘'],
+'孜然鱿鱼': ['鱿鱼处理干净，切花刀切块', '水开下锅烫20秒捞出', '洋葱爆香，下鱿鱼大火炒', '撒孜然粉、辣椒面、盐炒匀'],
+'黄金炸虾': ['大虾开背去虾线，加盐和料酒腌10分钟', '裹面糊（面粉+淀粉+蛋）', '六成油温炸熟捞出', '升高油温复炸至酥脆沥油'],
+'熔岩巧克力蛋糕': ['巧克力加黄油隔水融化', '鸡蛋加糖打发，筛入面粉拌匀', '倒入模具，烤箱200度烤8分钟', '表面定型、内心流心时出炉'],
+'可乐排骨': ['排骨焯水捞出沥干', '少油煎至两面微黄', '倒入可乐没过排骨，加生抽和姜片', '小火焖25分钟，大火收汁至浓亮']
 };
 
 /* ================= 每日吃饭寄语（按日期轮换，风格多变） ================= */
@@ -968,7 +1005,7 @@ var TOTAL = MENU.reduce(function (s, g) {
 }, 0);
 
 /* 凉菜清单（其余为热菜） */
-var COLD_DISHES = ['蒸白肉', '白切鸡', '口水鸡', '手撕鸡', '卤鸭翅', '卤鸭掌', '酱牛肉', '卤牛肉', '凉拌黄瓜', '凉拌千张', '凉拌豆干', '凉拌腐竹', '卤豆干', '皮蛋豆腐', '凉拌皮蛋', '麻酱凉面', '红油凉面'];
+var COLD_DISHES = ['蒸白肉', '白切鸡', '口水鸡', '手撕鸡', '卤鸭翅', '卤鸭掌', '酱牛肉', '卤牛肉', '凉拌黄瓜', '凉拌千张', '凉拌豆干', '凉拌腐竹', '卤豆干', '皮蛋豆腐', '凉拌皮蛋', '麻酱凉面', '红油凉面', '鸡丝凉拌沙拉', '黄瓜拌木耳', '藜麦鸡丁沙拉'];
 var COLD_SET = new Set(COLD_DISHES);
 function tempOf(dish) { return COLD_SET.has(dish) ? 'cold' : 'hot'; }
 
