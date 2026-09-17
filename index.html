@@ -326,6 +326,33 @@ body.authing .tabbar, body.authing .header { display: none; }
   text-decoration: underline;
 }
 
+/* ---------- 个人中心 ---------- */
+.meProfile { display: flex; align-items: center; gap: 14px; }
+.avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--c-primary-light); color: var(--c-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700; flex: none;
+}
+.meInfo { min-width: 0; }
+.meNameRow { display: flex; align-items: center; gap: 8px; }
+.meName { font-size: 17px; font-weight: 700; }
+.meMeta { font-size: 12px; color: var(--c-text-3); margin-top: 6px; }
+.setLabel { display: block; font-size: 12px; color: var(--c-text-2); margin-top: 14px; }
+.smallBtn {
+  height: 36px; margin-top: 10px; padding: 0 18px;
+  border: none; border-radius: 12px;
+  background: var(--c-primary); color: #fff;
+  font-size: 13px; font-weight: 600;
+}
+.dangerBtn {
+  width: 100%; height: 44px;
+  border: none; border-radius: 14px;
+  background: #FFECEC; color: var(--c-fav);
+  font-size: 15px; font-weight: 600;
+}
+.okMsg { font-size: 12px; color: var(--c-veg); text-align: center; margin: 12px 0 0; }
+
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
   position: fixed; inset: 0;
@@ -540,6 +567,47 @@ body.authing .tabbar, body.authing .header { display: none; }
       <p class="emptySub">来说点什么吧，家人都能看到</p>
     </div>
   </section>
+
+  <!-- 我的 -->
+  <section id="view-me" class="view" hidden>
+    <div id="meGuest" hidden>
+      <div class="empty">
+        <div class="emptyEmoji">👤</div>
+        <p>未登录</p>
+        <p class="emptySub">登录家庭成员后可查看个人信息与账户设置</p>
+        <button class="primaryBtn" id="meLoginBtn">去登录 / 注册</button>
+      </div>
+    </div>
+    <div id="meBody" hidden>
+      <div class="card meProfile">
+        <div class="avatar" id="meAvatar"></div>
+        <div class="meInfo">
+          <div class="meNameRow">
+            <span class="meName" id="meName"></span>
+            <span class="memberBadge" id="meRole"></span>
+          </div>
+          <p class="meMeta" id="meMeta"></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cardHead"><span class="cardTitle">⚙️ 账户设置</span></div>
+        <label class="setLabel" for="meNickInput">昵称</label>
+        <input class="authInput" id="meNickInput" placeholder="昵称（如：爸爸）" maxlength="12">
+        <button class="smallBtn" id="meNickSave">保存昵称</button>
+        <label class="setLabel" for="mePwOld">修改密码</label>
+        <input class="authInput" id="mePwOld" type="password" placeholder="当前密码" maxlength="32">
+        <input class="authInput" id="mePwNew" type="password" placeholder="新密码（至少 4 位）" maxlength="32">
+        <input class="authInput" id="mePwNew2" type="password" placeholder="确认新密码" maxlength="32">
+        <button class="smallBtn" id="mePwSave">修改密码</button>
+        <p class="msgErr" id="meErr" hidden></p>
+        <p class="okMsg" id="meOk" hidden></p>
+      </div>
+      <div class="card">
+        <button class="dangerBtn" id="meLogout">退出登录</button>
+        <p class="authHint">退出后本机需重新登录；其他设备不受影响。</p>
+      </div>
+    </div>
+  </section>
 </main>
 
 <div class="overlay" id="overlay"></div>
@@ -571,6 +639,10 @@ body.authing .tabbar, body.authing .header { display: none; }
   <button class="tabItem" data-tab="msg">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
     留言板
+  </button>
+  <button class="tabItem" data-tab="me">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path class="f" d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6Z"/></svg>
+    我的
   </button>
 </nav>
 
@@ -1144,6 +1216,7 @@ function showAuthView() {
   $('view-menu').hidden = true;
   $('view-fav').hidden = true;
   $('view-msg').hidden = true;
+  $('view-me').hidden = true;
 }
 function enterApp() {
   document.body.classList.remove('authing');
@@ -1176,6 +1249,7 @@ function applyAuthUI() {
     $('msgGuestZone').hidden = false;
     $('msgFormZone').hidden = true;
   }
+  if (state.tab === 'me') renderMe();
   if (msgCloudList) renderMsgs(msgCloudList);
 }
 function displayName() { return session ? (session.nick || session.username) : ''; }
@@ -1230,6 +1304,89 @@ function authSubmit() {
         : (e && e.message === 'NO_MEMBER' ? '未找到该用户名，请先注册' : '操作失败，请稍后重试'));
     })
     .then(function () { $('authSubmit').disabled = false; });
+}
+/* ================= 个人中心 ================= */
+function renderMe() {
+  var guest = !session;
+  $('meGuest').hidden = !guest;
+  $('meBody').hidden = guest;
+  if (guest) return;
+  var name = displayName();
+  $('meAvatar').textContent = name.charAt(0);
+  $('meName').textContent = name;
+  var role = $('meRole');
+  role.textContent = session.role === 'admin' ? '管理员' : '成员';
+  role.className = 'memberBadge' + (session.role === 'admin' ? ' admin' : '');
+  $('meMeta').textContent = '用户名：' + session.username + ' · 注册于 -';
+  $('meNickInput').value = session.nick || '';
+  ghGetJson(MEMBERS_FILE).then(function (data) {
+    var members = (data && data.members) || [];
+    var m = null;
+    members.forEach(function (x) { if (x.id === session.id) m = x; });
+    if (m && m.created) $('meMeta').textContent = '用户名：' + session.username + ' · 注册于 ' + m.created.slice(0, 10);
+  }).catch(function (e) { console.error('[Me] 成员信息读取失败', e); });
+}
+function meSetMsg(ok, text) {
+  $('meErr').hidden = ok;
+  $('meOk').hidden = !ok;
+  (ok ? $('meOk') : $('meErr')).textContent = text;
+}
+function meNickSave() {
+  var nick = $('meNickInput').value.trim();
+  if (!nick) { meSetMsg(false, '昵称不能为空'); return; }
+  $('meNickSave').disabled = true;
+  ghGetJson(MEMBERS_FILE)
+    .then(function (data) {
+      var members = (data && data.members) || [];
+      var hit = false;
+      members.forEach(function (m) { if (m.id === session.id) { m.nick = nick; hit = true; } });
+      if (!hit) throw new Error('NO_MEMBER');
+      return ghPutJson(MEMBERS_FILE, { members: members });
+    })
+    .then(function () {
+      session.nick = nick;
+      saveSession(session);
+      renderMe();
+      meSetMsg(true, '昵称已保存');
+      console.log('[Me] 昵称已更新: ' + nick);
+    })
+    .catch(function (e) { console.error('[Me] 昵称保存失败', e); meSetMsg(false, '保存失败，请稍后重试'); })
+    .then(function () { $('meNickSave').disabled = false; });
+}
+function mePwSave() {
+  var oldPw = $('mePwOld').value;
+  var newPw = $('mePwNew').value;
+  var newPw2 = $('mePwNew2').value;
+  if (!oldPw) { meSetMsg(false, '请填写当前密码'); return; }
+  if (newPw.length < 4) { meSetMsg(false, '新密码至少 4 位'); return; }
+  if (newPw !== newPw2) { meSetMsg(false, '两次新密码不一致'); return; }
+  $('mePwSave').disabled = true;
+  ghGetJson(MEMBERS_FILE)
+    .then(function (data) {
+      var members = (data && data.members) || [];
+      var m = null;
+      members.forEach(function (x) { if (x.id === session.id) m = x; });
+      if (!m) throw new Error('NO_MEMBER');
+      return memberHash(session.username, oldPw).then(function (h) {
+        if (h !== m.hash) throw new Error('BAD_PW');
+        return memberHash(session.username, newPw).then(function (nh) {
+          m.hash = nh;
+          return ghPutJson(MEMBERS_FILE, { members: members });
+        });
+      });
+    })
+    .then(function () {
+      $('mePwOld').value = '';
+      $('mePwNew').value = '';
+      $('mePwNew2').value = '';
+      meSetMsg(true, '密码已修改，下次登录使用新密码');
+      console.log('[Me] 密码已修改: ' + session.username);
+    })
+    .catch(function (e) {
+      console.error('[Me] 密码修改失败', e && e.message);
+      meSetMsg(false, e && e.message === 'BAD_PW' ? '当前密码错误' : '修改失败，请稍后重试');
+    })
+    .then(function () { $('mePwSave').disabled = false; });
 }
 function nickSave() {
   var nick = $('nickInput').value.trim();
@@ -1472,6 +1629,8 @@ function switchTab(tab) {
   $('view-menu').hidden = tab !== 'menu';
   $('view-fav').hidden = tab !== 'fav';
   $('view-msg').hidden = tab !== 'msg';
+  $('view-me').hidden = tab !== 'me';
+  if (tab === 'me') renderMe();
   if (tab === 'fav') renderFav();
   if (tab === 'msg') loadMessages(false);
 }
@@ -1549,6 +1708,15 @@ $('guestLink').addEventListener('click', function () {
   console.log('[Auth] 以游客身份浏览');
 });
 $('nickSave').addEventListener('click', nickSave);
+$('meLoginBtn').addEventListener('click', openAuth);
+$('meNickSave').addEventListener('click', meNickSave);
+$('mePwSave').addEventListener('click', mePwSave);
+$('meLogout').addEventListener('click', function () {
+  if (!window.confirm('确认退出当前账号？')) return;
+  saveSession(null);
+  showAuthView();
+  console.log('[Me] 已退出登录');
+});
 $('nickSkip').addEventListener('click', function () {
   enterApp();
   console.log('[Auth] 跳过昵称设置');
