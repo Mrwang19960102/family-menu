@@ -1534,11 +1534,11 @@ function escMsg(s) {
 function renderMsgList(list) {
   $('msgEmpty').hidden = list.length > 0;
   $('msgList').innerHTML = list.map(function (m) {
-    var del = (session && session.role === 'admin' && m.id)
-      ? '<button class="miniBtn msgDel" data-del="' + m.id + '">删除</button>' : '';
+    var canDel = session && m.id && (session.role === 'admin' || m.nick === displayName());
+    var del = canDel ? '<button class="miniBtn msgDel" data-del="' + m.id + '">删除</button>' : '';
     var rep = session ? '<button class="miniBtn" data-reply="' + m.id + '">回复</button>' : '';
     var replies = (m.replies || []).map(function (r) {
-      var rdel = (session && session.role === 'admin')
+      var rdel = (session && (session.role === 'admin' || r.nick === displayName()))
         ? '<button class="miniBtn msgDel" data-delr="' + m.id + '|' + r.id + '">删除</button>' : '';
       return '<div class="replyItem"><div class="replyHead"><span class="replyNick">' + escMsg(r.nick)
         + '</span><span class="msgRight"><span class="msgTime">' + fmtMsgTime(r.ts) + '</span>' + rdel
@@ -1917,14 +1917,24 @@ $('msgList').addEventListener('click', function (e) {
     return;
   }
   var dr = e.target.closest('[data-delr]');
-  if (dr && session && session.role === 'admin') {
+  if (dr && session) {
     var parts = dr.getAttribute('data-delr').split('|');
-    deleteReply(parts[0], parts[1]);
+    var owner = false;
+    (msgCloudList || []).forEach(function (m) {
+      if (m.id !== parts[0]) return;
+      (m.replies || []).forEach(function (r) {
+        if (r.id === parts[1] && (session.role === 'admin' || r.nick === displayName())) owner = true;
+      });
+    });
+    if (owner) deleteReply(parts[0], parts[1]);
     return;
   }
   var b = e.target.closest('[data-del]');
-  if (!b || !session || session.role !== 'admin') return;
+  if (!b || !session) return;
   var id = b.getAttribute('data-del');
+  var target = null;
+  (msgCloudList || []).forEach(function (m) { if (m.id === id) target = m; });
+  if (!target || (session.role !== 'admin' && target.nick !== displayName())) return;
   var list = (msgCloudList || []).filter(function (m) { return m.id !== id; });
   msgWriteCloud(list).then(function () {
     msgCloudList = list;
