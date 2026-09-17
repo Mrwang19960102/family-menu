@@ -301,6 +301,28 @@ button { font-family: inherit; }
 .msgText { font-size: 14px; color: var(--c-text-2); line-height: 1.7; margin-top: 8px; word-break: break-all; }
 .msgErr { font-size: 12px; color: var(--c-fav); text-align: center; margin: 12px 0; }
 .msgDel { background: #FFECEC; color: var(--c-fav); }
+.replyBox {
+  margin: 10px 0 0 12px; padding-left: 10px;
+  border-left: 2px solid var(--c-border);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.replyItem { background: #FAF7F4; border-radius: 10px; padding: 8px 10px; }
+.replyHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.replyNick { font-size: 12px; font-weight: 600; color: var(--c-primary); }
+.replyText { font-size: 13px; color: var(--c-text); margin-top: 4px; line-height: 1.5; }
+.replyForm { display: flex; gap: 8px; }
+.replyInput {
+  flex: 1; min-width: 0; height: 36px;
+  border: 1px solid var(--c-border); border-radius: 10px;
+  padding: 0 10px; font-size: 13px;
+  background: var(--c-bg); color: var(--c-text); outline: none;
+}
+.replySend {
+  height: 36px; padding: 0 14px; flex: none;
+  border: none; border-radius: 10px;
+  background: var(--c-primary); color: #fff; font-size: 13px;
+}
+.replyCancel { background: #EDE8E4; color: #86909C; }
 
 /* ---------- 成员登录 ---------- */
 .memberRow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
@@ -1514,15 +1536,60 @@ function renderMsgList(list) {
   $('msgList').innerHTML = list.map(function (m) {
     var del = (session && session.role === 'admin' && m.id)
       ? '<button class="miniBtn msgDel" data-del="' + m.id + '">删除</button>' : '';
+    var rep = session ? '<button class="miniBtn" data-reply="' + m.id + '">回复</button>' : '';
+    var replies = (m.replies || []).map(function (r) {
+      var rdel = (session && session.role === 'admin')
+        ? '<button class="miniBtn msgDel" data-delr="' + m.id + '|' + r.id + '">删除</button>' : '';
+      return '<div class="replyItem"><div class="replyHead"><span class="replyNick">' + escMsg(r.nick)
+        + '</span><span class="msgRight"><span class="msgTime">' + fmtMsgTime(r.ts) + '</span>' + rdel
+        + '</span></div><p class="replyText">' + escMsg(r.text) + '</p></div>';
+    }).join('');
+    var form = session
+      ? '<div class="replyForm" data-rf="' + m.id + '" hidden><input class="replyInput" maxlength="200" placeholder="回复 ' + escMsg(m.nick) + '…"><button class="replySend" data-rsend="' + m.id + '">发送</button><button class="replySend replyCancel" data-rcancel="' + m.id + '">取消</button></div>'
+      : '';
     return '<div class="card msgCard"><div class="msgHead"><span class="msgNick">' + escMsg(m.nick)
-      + '</span><span class="msgRight"><span class="msgTime">' + m.time + '</span>' + del
-      + '</span></div><p class="msgText">' + escMsg(m.text) + '</p></div>';
+      + '</span><span class="msgRight"><span class="msgTime">' + m.time + '</span>' + rep + del
+      + '</span></div><p class="msgText">' + escMsg(m.text) + '</p>'
+      + (replies || form ? '<div class="replyBox">' + replies + form + '</div>' : '')
+      + '</div>';
   }).join('');
 }
 function renderMsgs(list) {
   renderMsgList(list.map(function (m) {
-    return { nick: m.nick, text: m.text, time: fmtMsgTime(m.ts), id: m.id };
+    return { nick: m.nick, text: m.text, time: fmtMsgTime(m.ts), id: m.id, replies: m.replies || [] };
   }));
+}
+function sendReply(msgId, text) {
+  text = (text || '').trim();
+  if (!session || !text) return;
+  var list = (msgCloudList || []).map(function (m) {
+    if (m.id !== msgId) return m;
+    var cp = { id: m.id, nick: m.nick, text: m.text, ts: m.ts, replies: (m.replies || []).slice() };
+    cp.replies.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      nick: displayName(),
+      text: text,
+      ts: new Date().toISOString()
+    });
+    return cp;
+  });
+  msgWriteCloud(list).then(function () {
+    msgCloudList = list;
+    renderMsgs(list);
+    console.log('[Msg] 回复成功: ' + msgId);
+  }).catch(function (e) { console.error('[Msg] 回复失败', e); });
+}
+function deleteReply(msgId, replyId) {
+  var list = (msgCloudList || []).map(function (m) {
+    if (m.id !== msgId) return m;
+    var cp = { id: m.id, nick: m.nick, text: m.text, ts: m.ts, replies: (m.replies || []).filter(function (r) { return r.id !== replyId; }) };
+    return cp;
+  });
+  msgWriteCloud(list).then(function () {
+    msgCloudList = list;
+    renderMsgs(list);
+    console.log('[Msg] 已删除回复 ' + replyId);
+  }).catch(function (e) { console.error('[Msg] 删除回复失败', e); });
 }
 function loadMessages(force) {
   var mode = $('msgMode');
@@ -1829,6 +1896,32 @@ $('logoutBtn').addEventListener('click', function () {
   console.log('[Auth] 已退出登录');
 });
 $('msgList').addEventListener('click', function (e) {
+  var rb = e.target.closest('[data-reply]');
+  if (rb && session) {
+    var f = document.querySelector('.replyForm[data-rf="' + rb.getAttribute('data-reply') + '"]');
+    if (f) {
+      f.hidden = !f.hidden;
+      if (!f.hidden) f.querySelector('input').focus();
+    }
+    return;
+  }
+  var rs = e.target.closest('[data-rsend]');
+  if (rs) {
+    sendReply(rs.getAttribute('data-rsend'), rs.parentNode.querySelector('input').value);
+    return;
+  }
+  var rc = e.target.closest('[data-rcancel]');
+  if (rc) {
+    var f2 = document.querySelector('.replyForm[data-rf="' + rc.getAttribute('data-rcancel') + '"]');
+    if (f2) f2.hidden = true;
+    return;
+  }
+  var dr = e.target.closest('[data-delr]');
+  if (dr && session && session.role === 'admin') {
+    var parts = dr.getAttribute('data-delr').split('|');
+    deleteReply(parts[0], parts[1]);
+    return;
+  }
   var b = e.target.closest('[data-del]');
   if (!b || !session || session.role !== 'admin') return;
   var id = b.getAttribute('data-del');
