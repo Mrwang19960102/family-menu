@@ -404,6 +404,36 @@ body.authing .tabbar, body.authing .header { display: none; }
 }
 .okMsg { font-size: 12px; color: var(--c-veg); text-align: center; margin: 12px 0 0; }
 
+/* ---------- 家庭门户 ---------- */
+.modGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modCard {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 16px 14px;
+  background: var(--c-card); border: none; border-radius: var(--r-card);
+  box-shadow: var(--shadow-card); text-align: left;
+}
+.modCard:active { transform: scale(.97); }
+.modCard.soon { opacity: .55; }
+.modEmoji { font-size: 26px; }
+.modName { font-size: 16px; font-weight: 700; color: var(--c-text); }
+.modDesc { font-size: 11px; color: var(--c-text-3); }
+.kSeg { margin-bottom: 12px; }
+.kStats { font-size: 12px; color: var(--c-text-2); text-align: center; margin: 0 0 12px; }
+
+/* ---------- 成员管理 ---------- */
+.mbrRow {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 0; border-bottom: 1px solid var(--c-border);
+}
+.mbrRow:last-child { border-bottom: none; }
+.mbrInfo { min-width: 0; }
+.mbrNameRow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mbrName { font-size: 14px; font-weight: 600; color: var(--c-text); }
+.mbrStatus { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--c-veg-light); color: var(--c-veg); }
+.mbrStatus.pending { background: var(--c-soup-light); color: var(--c-soup); }
+.mbrActs { display: flex; gap: 6px; flex: none; }
+.msgErr.ok { color: var(--c-veg); }
+
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
   position: fixed; inset: 0;
@@ -479,14 +509,13 @@ body.authing .tabbar, body.authing .header { display: none; }
 <header class="header">
   <div class="headerTop">
     <div>
-        <h1 class="title">🍚 家庭菜单</h1>
-        <p class="subtitle">今天也好好吃饭</p>
+        <h1 class="title">🏠 家庭小程序</h1>
+        <p class="subtitle">御膳房 · 家庭留言 · 更多模块陆续上线</p>
         <div class="memberRow" id="memberRow" hidden>
           <span class="memberBadge" id="memberBadge"></span>
           <button class="miniBtn" id="logoutBtn">退出登录</button>
         </div>
       </div>
-    <div class="statCard">共 <b id="statTotal">0</b> 道 · 已收藏 <b id="statFav">0</b></div>
   </div>
 </header>
 
@@ -494,8 +523,8 @@ body.authing .tabbar, body.authing .header { display: none; }
   <!-- 注册 / 登录首屏 -->
   <section id="view-auth" class="view" hidden>
     <div class="authWrap">
-      <div class="authTitle">🍚 家庭菜单</div>
-      <p class="authSub">家庭成员用用户名 + 密码登录 · 游客可只读浏览</p>
+      <div class="authTitle">🏠 家庭小程序</div>
+      <p class="authSub">御膳房 · 家庭留言 · 更多模块陆续上线</p>
       <div class="card authCard" id="authCard">
         <div class="authTabs" id="authTabs">
           <button class="authTab active" data-auth="login">登录</button>
@@ -529,46 +558,45 @@ body.authing .tabbar, body.authing .header { display: none; }
       <p class="quoteText" id="quoteText"></p>
     </div>
 
-    <div class="card">
-      <div class="cardHead"><span class="cardTitle">分类速览</span></div>
-      <div class="quickGrid" id="quickGrid"></div>
-    </div>
-
-    <div class="card">
-      <div class="cardHead">
-        <span class="cardTitle">🎲 今天吃什么</span>
-        <span class="catCount">让命运决定今晚菜单</span>
-      </div>
-      <div class="steppers">
-        <div class="stepper">
-          <span class="stepLabel meat">荤菜</span>
-          <button class="stepBtn" data-t="meat" data-d="-1" aria-label="减少荤菜">−</button>
-          <span class="stepVal" id="meatVal">1</span>
-          <button class="stepBtn" data-t="meat" data-d="1" aria-label="增加荤菜">+</button>
-        </div>
-        <div class="stepper">
-          <span class="stepLabel veg">素菜</span>
-          <button class="stepBtn" data-t="veg" data-d="-1" aria-label="减少素菜">−</button>
-          <span class="stepVal" id="vegVal">1</span>
-          <button class="stepBtn" data-t="veg" data-d="1" aria-label="增加素菜">+</button>
-        </div>
-        <div class="stepper">
-          <span class="stepLabel soup">汤羹</span>
-          <button class="stepBtn" data-t="soup" data-d="-1" aria-label="减少汤羹">−</button>
-          <span class="stepVal" id="soupVal">0</span>
-          <button class="stepBtn" data-t="soup" data-d="1" aria-label="增加汤羹">+</button>
-        </div>
-      </div>
-      <button class="primaryBtn" id="drawBtn">开始抽菜</button>
-      <p class="hint" id="drawHint" hidden>荤素至少选 1 道</p>
-      <div id="resultBox"></div>
-      <button class="ghostBtn" id="redrawBtn" hidden>重新抽</button>
+    <div class="modGrid">
+      <button class="modCard" data-mod="kitchen">
+        <span class="modEmoji">🍚</span>
+        <span class="modName">御膳房</span>
+        <span class="modDesc">菜单 · 做法 · 抽菜 · 收藏</span>
+      </button>
+      <button class="modCard" data-mod="msg">
+        <span class="modEmoji">💬</span>
+        <span class="modName">家庭留言板</span>
+        <span class="modDesc">全家留言与回复</span>
+      </button>
+      <button class="modCard" data-mod="me">
+        <span class="modEmoji">👤</span>
+        <span class="modName">我的</span>
+        <span class="modDesc">账户与成员管理</span>
+      </button>
+      <button class="modCard soon" disabled>
+        <span class="modEmoji">📒</span>
+        <span class="modName">家庭记账</span>
+        <span class="modDesc">敬请期待</span>
+      </button>
     </div>
   </section>
 
-  <!-- 菜单 -->
-  <section id="view-menu" class="view" hidden>
-    <div class="searchWrap">
+  <!-- 御膳房（模块） -->
+  <section id="view-kitchen" class="view" hidden>
+    <div class="seg kSeg" id="kSeg">
+      <button class="segBtn meat active" data-ktab="menu">菜单</button>
+      <button class="segBtn soup" data-ktab="draw">今天吃什么</button>
+      <button class="segBtn veg" data-ktab="fav">收藏</button>
+    </div>
+
+    <div id="ktab-menu">
+      <p class="kStats">🍚 御膳房 · 共 <b id="statTotal">0</b> 道 · 已收藏 <b id="statFav">0</b></p>
+      <div class="card">
+        <div class="cardHead"><span class="cardTitle">分类速览</span></div>
+        <div class="quickGrid" id="quickGrid"></div>
+      </div>
+      <div class="searchWrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="searchInput" type="search" placeholder="搜索菜名，如「牛肉」「豆腐」" enterkeyhint="search">
       <button class="searchClear" id="searchClear" hidden aria-label="清除">×</button>
@@ -588,20 +616,53 @@ body.authing .tabbar, body.authing .header { display: none; }
       </div>
     </div>
 
-    <div id="searchBox" hidden></div>
-  </section>
-
-  <!-- 收藏 -->
-  <section id="view-fav" class="view" hidden>
-    <div class="favHead" id="favHead"></div>
-    <div id="favBox"></div>
-    <div class="empty" id="favEmpty" hidden>
-      <div class="emptyEmoji">🥢</div>
-      <p>还没有收藏</p>
-      <p class="emptySub">去菜单页点菜名，打开做法即可收藏</p>
-      <button class="primaryBtn" id="goMenuBtn">去逛逛菜单</button>
+      <div id="searchBox" hidden></div>
     </div>
-    <p class="footNote">收藏仅保存在当前设备浏览器，换设备不共享</p>
+
+    <div id="ktab-draw" hidden>
+      <div class="card">
+        <div class="cardHead">
+          <span class="cardTitle">🎲 今天吃什么</span>
+          <span class="catCount">让命运决定今晚菜单</span>
+        </div>
+        <div class="steppers">
+          <div class="stepper">
+            <span class="stepLabel meat">荤菜</span>
+            <button class="stepBtn" data-t="meat" data-d="-1" aria-label="减少荤菜">−</button>
+            <span class="stepVal" id="meatVal">1</span>
+            <button class="stepBtn" data-t="meat" data-d="1" aria-label="增加荤菜">+</button>
+          </div>
+          <div class="stepper">
+            <span class="stepLabel veg">素菜</span>
+            <button class="stepBtn" data-t="veg" data-d="-1" aria-label="减少素菜">−</button>
+            <span class="stepVal" id="vegVal">1</span>
+            <button class="stepBtn" data-t="veg" data-d="1" aria-label="增加素菜">+</button>
+          </div>
+          <div class="stepper">
+            <span class="stepLabel soup">汤羹</span>
+            <button class="stepBtn" data-t="soup" data-d="-1" aria-label="减少汤羹">−</button>
+            <span class="stepVal" id="soupVal">0</span>
+            <button class="stepBtn" data-t="soup" data-d="1" aria-label="增加汤羹">+</button>
+          </div>
+        </div>
+        <button class="primaryBtn" id="drawBtn">开始抽菜</button>
+        <p class="hint" id="drawHint" hidden>荤素至少选 1 道</p>
+        <div id="resultBox"></div>
+        <button class="ghostBtn" id="redrawBtn" hidden>重新抽</button>
+      </div>
+    </div>
+
+    <div id="ktab-fav" hidden>
+      <div class="favHead" id="favHead"></div>
+      <div id="favBox"></div>
+      <div class="empty" id="favEmpty" hidden>
+        <div class="emptyEmoji">🥢</div>
+        <p>还没有收藏</p>
+        <p class="emptySub">去菜单点菜名，打开做法即可收藏</p>
+        <button class="primaryBtn" id="goMenuBtn">去逛逛御膳房</button>
+      </div>
+      <p class="footNote">收藏仅保存在当前设备浏览器，换设备不共享</p>
+    </div>
   </section>
 
   <!-- 留言板 -->
@@ -663,6 +724,10 @@ body.authing .tabbar, body.authing .header { display: none; }
         <p class="msgErr" id="meErr" hidden></p>
         <p class="okMsg" id="meOk" hidden></p>
       </div>
+      <div class="card" id="memberMgr" hidden>
+        <div class="cardHead"><span class="cardTitle">👥 成员管理</span><span class="catCount" id="memberCount"></span></div>
+        <div id="memberList"></div>
+      </div>
       <div class="card">
         <button class="dangerBtn" id="meLogout">退出登录</button>
         <p class="authHint">退出后本机需重新登录；其他设备不受影响。</p>
@@ -678,6 +743,15 @@ body.authing .tabbar, body.authing .header { display: none; }
     <div class="confirmBtns">
       <button class="confirmBtn cancel" id="confirmCancel">取消</button>
       <button class="confirmBtn ok" id="confirmOk">删除</button>
+    </div>
+  </div>
+</div>
+<div class="confirmMask" id="pwModal" hidden>
+  <div class="confirmBox">
+    <p class="confirmText" id="pwModalText"></p>
+    <div class="confirmBtns">
+      <button class="confirmBtn cancel" id="pwModalCancel">关闭</button>
+      <button class="confirmBtn ok" id="pwModalOk">确认重置</button>
     </div>
   </div>
 </div>
@@ -698,13 +772,9 @@ body.authing .tabbar, body.authing .header { display: none; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path class="f" d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>
     首页
   </button>
-  <button class="tabItem" data-tab="menu">
+  <button class="tabItem" data-tab="kitchen">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M5 12h14a7 7 0 0 1-14 0Z"/><path d="M9 21h6"/><path d="M12 19v2"/><path d="M9 3c0 1.5 1 1.5 1 3"/><path d="M14 3c0 1.5 1 1.5 1 3"/></svg>
-    菜单
-  </button>
-  <button class="tabItem" data-tab="fav">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M12 20.5S3.5 15 3.5 9.5a4.7 4.7 0 0 1 8.5-2.8 4.7 4.7 0 0 1 8.5 2.8c0 5.5-8.5 11-8.5 11Z"/></svg>
-    收藏
+    御膳房
   </button>
   <button class="tabItem" data-tab="msg">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
@@ -714,6 +784,7 @@ body.authing .tabbar, body.authing .header { display: none; }
   <button class="tabItem" data-tab="me">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path class="f" d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6Z"/></svg>
     我的
+    <span class="tabBadge" id="meBadge" hidden></span>
   </button>
 </nav>
 
@@ -1080,7 +1151,7 @@ var QUOTES = [
 ];
 
 /* ================= 状态 ================= */
-var state = { tab: 'home', group: 0, cat: 0, kw: '', temp: 'all' };
+var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all' };
 var pickCount = { meat: 1, veg: 1, soup: 0 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -1280,7 +1351,7 @@ function toggleFav(dish) {
     el.textContent = nowFav ? '♥ 已收藏' : '♡ 收藏';
   });
   updateStats();
-  if (state.tab === 'fav') renderFav();
+  if (state.tab === 'kitchen' && state.ktab === 'fav') renderFav();
   if (currentSheetDish === dish) updateSheetFavBtn();
   console.log('[Fav] ' + dish + ' -> ' + (nowFav ? '收藏' : '取消'));
 }
@@ -1368,8 +1439,7 @@ function showAuthView() {
   document.body.classList.add('authing');
   $('view-auth').hidden = false;
   $('view-home').hidden = true;
-  $('view-menu').hidden = true;
-  $('view-fav').hidden = true;
+  $('view-kitchen').hidden = true;
   $('view-msg').hidden = true;
   $('view-me').hidden = true;
 }
@@ -1420,6 +1490,7 @@ function authSubmit() {
   var pw = $('authPw').value;
   var err = $('authErr');
   err.hidden = true;
+  err.className = 'msgErr';
   if (!/^\S{2,16}$/.test(user)) { err.hidden = false; err.textContent = '用户名为 2-16 位且不含空格'; return; }
   if (pw.length < 4) { err.hidden = false; err.textContent = '密码至少 4 位'; return; }
   if (authMode === 'reg' && $('authPw2').value !== pw) { err.hidden = false; err.textContent = '两次密码不一致'; return; }
@@ -1431,6 +1502,7 @@ function authSubmit() {
         var m = null;
         members.forEach(function (x) { if (x.username === user) m = x; });
         if (!m) throw new Error('NO_MEMBER');
+        if (memberStatus(m) === 'pending') throw new Error('PENDING');
         return memberHash(user, pw).then(function (h) {
           if (h !== m.hash) throw new Error('BAD_PW');
           saveSession({ id: m.id, username: m.username, nick: m.nick || '', role: m.role });
@@ -1440,23 +1512,34 @@ function authSubmit() {
       }
       var exists = members.some(function (x) { return x.username === user; });
       if (exists) throw new Error('DUP');
-      var role = members.length ? 'member' : 'admin';
+      var isFirst = members.length === 0;
+      var role = isFirst ? 'admin' : 'member';
+      var status = isFirst ? 'active' : 'pending';
       return memberHash(user, pw).then(function (h) {
-        var rec = { id: Date.now().toString(36), username: user, hash: h, nick: '', role: role, created: new Date().toISOString() };
+        var rec = { id: Date.now().toString(36), username: user, hash: h, nick: '', role: role, status: status, created: new Date().toISOString() };
         members.push(rec);
         return ghPutJson(MEMBERS_FILE, { members: members }).then(function () {
-          saveSession({ id: rec.id, username: rec.username, nick: '', role: rec.role });
-          afterAuth();
-          console.log('[Auth] 注册成功: ' + user + ' (' + role + ')');
+          if (isFirst) {
+            saveSession({ id: rec.id, username: rec.username, nick: '', role: rec.role });
+            afterAuth();
+            console.log('[Auth] 注册成功(首位管理员): ' + user);
+          } else {
+            err.className = 'msgErr ok';
+            err.hidden = false;
+            err.textContent = '注册成功！待管理员审批通过后即可登录。';
+            console.log('[Auth] 注册成功(待审批): ' + user);
+          }
         });
       });
     })
     .catch(function (e) {
       console.error('[Auth] 失败', e && e.message);
       err.hidden = false;
+      err.className = 'msgErr';
       err.textContent = e && e.message === 'BAD_PW' ? '密码错误'
+        : (e && e.message === 'PENDING' ? '账号待管理员审批，通过后即可登录'
         : (e && e.message === 'DUP' ? '该用户名已注册，请直接登录'
-        : (e && e.message === 'NO_MEMBER' ? '未找到该用户名，请先注册' : '操作失败，请稍后重试'));
+        : (e && e.message === 'NO_MEMBER' ? '未找到该用户名，请先注册' : '操作失败，请稍后重试')));
     })
     .then(function () { $('authSubmit').disabled = false; });
 }
@@ -1482,7 +1565,54 @@ function renderMe() {
     var m = null;
     members.forEach(function (x) { if (x.id === sid) m = x; });
     if (m && m.created) $('meMeta').textContent = '用户名：' + sname + ' · 注册于 ' + m.created.slice(0, 10);
+    renderMemberMgr(members);
+    updateMeBadgeFrom(members);
   }).catch(function (e) { console.error('[Me] 成员信息读取失败', e); });
+}
+
+/* ================= 成员管理（管理员，v2.0） ================= */
+function memberStatus(m) { return m.status || 'active'; }
+function renderMemberMgr(members) {
+  var isAdmin = session && session.role === 'admin';
+  $('memberMgr').hidden = !isAdmin;
+  if (!isAdmin) return;
+  $('memberCount').textContent = members.length + ' 人';
+  $('memberList').innerHTML = members.map(function (m) {
+    var st = memberStatus(m);
+    var acts = '';
+    if (st === 'pending') acts += '<button class="miniBtn" data-mact="approve" data-mid="' + m.id + '">通过</button>';
+    acts += '<button class="miniBtn" data-mact="reset" data-mid="' + m.id + '">重置密码</button>';
+    if (m.id !== session.id) acts += '<button class="miniBtn msgDel" data-mact="del" data-mid="' + m.id + '">移除</button>';
+    return '<div class="mbrRow"><div class="mbrInfo"><div class="mbrNameRow"><span class="mbrName">' + escMsg(m.nick || m.username) + '</span>'
+      + '<span class="memberBadge' + (m.role === 'admin' ? ' admin' : '') + '">' + (m.role === 'admin' ? '管理员' : '成员') + '</span>'
+      + '<span class="mbrStatus' + (st === 'pending' ? ' pending' : '') + '">' + (st === 'pending' ? '待审批' : '正常') + '</span></div>'
+      + '<p class="meMeta">' + escMsg(m.username) + ' · 注册于 ' + (m.created || '').slice(0, 10) + '</p></div>'
+      + '<div class="mbrActs">' + acts + '</div></div>';
+  }).join('');
+}
+function updateMeBadgeFrom(members) {
+  var b = $('meBadge');
+  if (!(session && session.role === 'admin')) { b.hidden = true; return; }
+  var n = members.filter(function (m) { return memberStatus(m) === 'pending'; }).length;
+  if (n > 0) { b.hidden = false; b.textContent = String(n); }
+  else { b.hidden = true; }
+}
+function refreshMembers() {
+  ghGetJson(MEMBERS_FILE).then(function (d) {
+    var ms = (d && d.members) || [];
+    renderMemberMgr(ms);
+    updateMeBadgeFrom(ms);
+  }).catch(function (e) { console.error('[Me] 成员读取失败', e); });
+}
+function memberWrite(mutate, logText) {
+  return ghGetJson(MEMBERS_FILE).then(function (d) {
+    var ms = mutate((d && d.members) || []);
+    return ghPutJson(MEMBERS_FILE, { members: ms }).then(function () {
+      console.log(logText);
+      renderMemberMgr(ms);
+      updateMeBadgeFrom(ms);
+    });
+  }).catch(function (e) { console.error('[Me] 成员写入失败', e); });
 }
 function meSetMsg(ok, text) {
   $('meErr').hidden = ok;
@@ -1899,13 +2029,23 @@ function switchTab(tab) {
     el.classList.toggle('active', el.getAttribute('data-tab') === tab);
   });
   $('view-home').hidden = tab !== 'home';
-  $('view-menu').hidden = tab !== 'menu';
-  $('view-fav').hidden = tab !== 'fav';
+  $('view-kitchen').hidden = tab !== 'kitchen';
   $('view-msg').hidden = tab !== 'msg';
   $('view-me').hidden = tab !== 'me';
+  if (tab === 'kitchen') switchKTab(state.ktab);
   if (tab === 'me') renderMe();
-  if (tab === 'fav') renderFav();
   if (tab === 'msg') loadMessages(false);
+}
+function switchKTab(t) {
+  state.ktab = t;
+  document.querySelectorAll('#kSeg .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el.getAttribute('data-ktab') === t);
+  });
+  $('ktab-menu').hidden = t !== 'menu';
+  $('ktab-draw').hidden = t !== 'draw';
+  $('ktab-fav').hidden = t !== 'fav';
+  if (t === 'fav') renderFav();
+  if (t === 'menu') { renderBrowse(); if (state.kw) renderSearch(); }
 }
 
 /* ================= 事件绑定 ================= */
@@ -1963,6 +2103,15 @@ document.querySelector('.tabbar').addEventListener('click', function (e) {
   var item = e.target.closest('.tabItem');
   if (item) switchTab(item.getAttribute('data-tab'));
 });
+$('kSeg').addEventListener('click', function (e) {
+  var btn = e.target.closest('.segBtn');
+  if (btn) switchKTab(btn.getAttribute('data-ktab'));
+});
+document.querySelector('.modGrid').addEventListener('click', function (e) {
+  var card = e.target.closest('.modCard');
+  if (!card || card.disabled) return;
+  switchTab(card.getAttribute('data-mod'));
+});
 document.querySelector('.steppers').addEventListener('click', function (e) {
   var btn = e.target.closest('.stepBtn');
   if (!btn) return;
@@ -1973,7 +2122,7 @@ document.querySelector('.steppers').addEventListener('click', function (e) {
 });
 $('drawBtn').addEventListener('click', doDraw);
 $('redrawBtn').addEventListener('click', doDraw);
-$('goMenuBtn').addEventListener('click', function () { switchTab('menu'); });
+$('goMenuBtn').addEventListener('click', function () { switchTab('kitchen'); switchKTab('menu'); });
 $('msgSend').addEventListener('click', sendMsg);
 $('openAuthBtn').addEventListener('click', openAuth);
 $('guestLink').addEventListener('click', function () {
@@ -1990,6 +2139,59 @@ $('meLogout').addEventListener('click', function () {
     showAuthView();
     console.log('[Me] 已退出登录');
   });
+});
+var pendingReset = null;
+$('memberList').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-mact]');
+  if (!btn || !session || session.role !== 'admin') return;
+  var act = btn.getAttribute('data-mact');
+  var mid = btn.getAttribute('data-mid');
+  var row = btn.closest('.mbrRow');
+  var nick = row.querySelector('.mbrName').textContent;
+  var uname = row.querySelector('.meMeta').textContent.split(' · ')[0];
+  if (act === 'approve') {
+    memberWrite(function (ms) {
+      ms.forEach(function (m) { if (m.id === mid) m.status = 'active'; });
+      return ms;
+    }, '[Me] 已通过成员: ' + uname);
+  } else if (act === 'del') {
+    askConfirm('确认移除成员「' + nick + '」？其历史留言将保留。', '移除', function () {
+      memberWrite(function (ms) {
+        return ms.filter(function (m) { return m.id !== mid; });
+      }, '[Me] 已移除成员: ' + uname);
+    });
+  } else if (act === 'reset') {
+    var pw = Math.random().toString(36).slice(2, 6) + Math.random().toString(36).slice(2, 6);
+    pendingReset = { id: mid, uname: uname, pw: pw };
+    $('pwModalText').textContent = '将为「' + nick + '」设置新密码：' + pw + '（请转告本人，确认后立即生效）';
+    $('pwModal').hidden = false;
+  }
+});
+$('pwModalCancel').addEventListener('click', function () {
+  pendingReset = null;
+  $('pwModal').hidden = true;
+});
+$('pwModal').addEventListener('click', function (e) {
+  if (e.target === $('pwModal')) { pendingReset = null; $('pwModal').hidden = true; }
+});
+$('pwModalOk').addEventListener('click', function () {
+  if (!pendingReset) return;
+  var pr = pendingReset;
+  pendingReset = null;
+  $('pwModal').hidden = true;
+  ghGetJson(MEMBERS_FILE).then(function (d) {
+    var ms = (d && d.members) || [];
+    var m = null;
+    ms.forEach(function (x) { if (x.id === pr.id) m = x; });
+    if (!m) throw new Error('NO_MEMBER');
+    return memberHash(m.username, pr.pw).then(function (h) {
+      m.hash = h;
+      return ghPutJson(MEMBERS_FILE, { members: ms });
+    });
+  }).then(function () {
+    console.log('[Me] 已重置密码: ' + pr.uname);
+    refreshMembers();
+  }).catch(function (e) { console.error('[Me] 重置密码失败', e); });
 });
 $('nickSkip').addEventListener('click', function () {
   enterApp();
@@ -2073,9 +2275,8 @@ $('quickGrid').addEventListener('click', function (e) {
   state.kw = '';
   $('searchInput').value = '';
   $('searchClear').hidden = true;
-  switchTab('menu');
-  renderBrowse();
-  renderSearch();
+  switchTab('kitchen');
+  switchKTab('menu');
 });
 
 /* ================= 初始化 ================= */
@@ -2088,6 +2289,21 @@ updateDrawBtn();
 if (session && !session.username) saveSession(null); // 旧版昵称会话失效，需按用户名+密码重新登录
 applyAuthUI();
 if (!session) showAuthView();
+if (session) {
+  // 会话有效性校验：成员被移除或仍待审批则强制退出（v2.0）
+  ghGetJson(MEMBERS_FILE).then(function (d) {
+    var ms = (d && d.members) || [];
+    var m = null;
+    ms.forEach(function (x) { if (x.id === session.id) m = x; });
+    if (!m || memberStatus(m) === 'pending') {
+      saveSession(null);
+      showAuthView();
+      console.log('[Auth] 会话失效：成员不存在或待审批');
+    } else {
+      updateMeBadgeFrom(ms);
+    }
+  }).catch(function (e) { console.error('[Auth] 会话校验失败', e); });
+}
 pollMessages(); // 启动时拉一次，初始化未读红点
 console.log('[Menu] 初始化完成，共 ' + TOTAL + ' 道菜');
 </script>
