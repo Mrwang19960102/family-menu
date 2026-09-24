@@ -1177,7 +1177,7 @@ var QUOTES = [
 ];
 
 /* ================= 状态 ================= */
-var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', gtab: 'list', gdir: 'all', gperson: '', fdir: 'out' };
+var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', gtab: 'list', gdir: 'all', gperson: '', fdir: 'out', gEditId: '' };
 var pickCount = { meat: 1, veg: 1, soup: 0 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -1411,6 +1411,18 @@ function writeGifts(mutate, logText) {
 function giftCanDel(g) {
   return !!session && g.by === session.id;
 }
+/* 编辑权限：本人记录 + 历史导入账（by=import）均可修改 */
+function giftCanEdit(g) {
+  return !!session && (g.by === session.id || g.by === 'import');
+}
+function resetGiftForm() {
+  state.gEditId = '';
+  $('gSave').textContent = '保存';
+  $('gAmount').value = '';
+  $('gName').value = '';
+  $('gNote').value = '';
+  $('gErr').hidden = true;
+}
 function renderGiftView() {
   loadGifts(false).then(function (list) {
     renderGiftAll(list);
@@ -1449,11 +1461,12 @@ function renderGiftList(list) {
     return;
   }
   $('giftList').innerHTML = rows.map(function (g) {
+    var edit = giftCanEdit(g) ? '<button class="miniBtn" data-gedit="' + g.id + '">编辑</button>' : '';
     var del = giftCanDel(g) ? '<button class="miniBtn msgDel" data-gdel="' + g.id + '">删除</button>' : '';
     return '<div class="gRow"><div class="gLeft"><div class="gTop"><span class="gName">' + escMsg(g.name) + '</span>'
       + '<span class="gTag">' + escMsg(g.event) + '</span><span class="gTag">' + escMsg(g.rel) + '</span></div>'
       + '<p class="gMeta">' + [g.date, g.note, g.byNick].filter(Boolean).map(escMsg).join(' · ') + '</p></div>'
-      + '<div class="gRight"><span class="gAmt ' + g.dir + '">' + (g.dir === 'out' ? '−¥' : '+¥') + g.amount + '</span> ' + del + '</div></div>';
+      + '<div class="gRight"><span class="gAmt ' + g.dir + '">' + (g.dir === 'out' ? '−¥' : '+¥') + g.amount + '</span> ' + edit + del + '</div></div>';
   }).join('');
 }
 function renderGiftPersons(list) {
@@ -1516,12 +1529,17 @@ $('gAddToggle').addEventListener('click', function () {
   var f = $('gForm');
   f.hidden = !f.hidden;
   if (!f.hidden) {
+    resetGiftForm();
     $('gDate').value = new Date().toISOString().slice(0, 10);
     $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
     $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+    state.fdir = 'out';
+    document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-fdir') === 'out');
+    });
   }
 });
-$('gCancel').addEventListener('click', function () { $('gForm').hidden = true; });
+$('gCancel').addEventListener('click', function () { $('gForm').hidden = true; resetGiftForm(); });
 $('gFormDir').addEventListener('click', function (e) {
   var b = e.target.closest('.segBtn');
   if (!b) return;
@@ -1533,36 +1551,75 @@ $('gFormDir').addEventListener('click', function (e) {
 $('gSave').addEventListener('click', function () {
   var err = $('gErr');
   err.hidden = true;
+  var editId = state.gEditId;
   var date = $('gDate').value;
   var amount = parseFloat($('gAmount').value);
   var name = $('gName').value.trim();
-  if (!date || !name || !(amount > 0)) {
+  if (!name || !(amount > 0) || (!editId && !date)) {
     err.hidden = false;
-    err.textContent = '请填写日期、对方姓名和大于 0 的金额';
+    err.textContent = editId ? '请填写对方姓名和大于 0 的金额（日期可留空）' : '请填写日期、对方姓名和大于 0 的金额';
     return;
   }
-  var rec = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    date: date, name: name, rel: $('gRel').value, event: $('gEvent').value,
-    dir: state.fdir, amount: amount, note: $('gNote').value.trim(),
-    by: session.id, byNick: displayName(), ts: new Date().toISOString()
-  };
-  writeGifts(function (list) {
-    list.unshift(rec);
-    return list;
-  }, '[Gift] 记账: ' + name + ' ' + rec.dir + ' ' + amount).then(function (nl) {
+  var rel = $('gRel').value, event = $('gEvent').value, note = $('gNote').value.trim();
+  var logText, mutate;
+  if (editId) {
+    logText = '[Gift] 修改记录: ' + editId + ' -> ' + name + ' ' + state.fdir + ' ' + amount;
+    mutate = function (list) {
+      return list.map(function (g) {
+        if (g.id !== editId) return g;
+        g.date = date; g.name = name; g.rel = rel; g.event = event;
+        g.dir = state.fdir; g.amount = amount; g.note = note;
+        g.editedBy = displayName(); g.editedAt = new Date().toISOString();
+        return g;
+      });
+    };
+  } else {
+    var rec = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      date: date, name: name, rel: rel, event: event,
+      dir: state.fdir, amount: amount, note: note,
+      by: session.id, byNick: displayName(), ts: new Date().toISOString()
+    };
+    logText = '[Gift] 记账: ' + name + ' ' + rec.dir + ' ' + amount;
+    mutate = function (list) { list.unshift(rec); return list; };
+  }
+  $('gSave').disabled = true;
+  writeGifts(mutate, logText).then(function (nl) {
     $('gForm').hidden = true;
-    $('gAmount').value = '';
-    $('gName').value = '';
-    $('gNote').value = '';
+    resetGiftForm();
     renderGiftAll(nl);
   }).catch(function (e) {
     err.hidden = false;
     err.textContent = '保存失败，请稍后重试';
     console.error('[Gift] 写入失败', e);
-  });
+  }).then(function () { $('gSave').disabled = false; });
 });
 $('giftList').addEventListener('click', function (e) {
+  var eb = e.target.closest('[data-gedit]');
+  if (eb) {
+    var eid = eb.getAttribute('data-gedit');
+    var rec0 = null;
+    (giftCache || []).forEach(function (g) { if (g.id === eid) rec0 = g; });
+    if (!rec0 || !giftCanEdit(rec0)) return;
+    state.gEditId = eid;
+    $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+    $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+    $('gDate').value = rec0.date || '';
+    $('gAmount').value = rec0.amount;
+    $('gName').value = rec0.name;
+    $('gRel').value = rec0.rel;
+    $('gEvent').value = rec0.event;
+    $('gNote').value = rec0.note || '';
+    state.fdir = rec0.dir;
+    document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-fdir') === rec0.dir);
+    });
+    $('gSave').textContent = '保存修改';
+    $('gErr').hidden = true;
+    $('gForm').hidden = false;
+    $('gForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   var btn = e.target.closest('[data-gdel]');
   if (!btn) return;
   var gid = btn.getAttribute('data-gdel');
