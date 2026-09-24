@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F0653A">
-<title>家庭菜单</title>
+<title>Song少&amp;夏夏.窝里</title>
 <style>
 :root {
   --c-primary: #F0653A;
@@ -528,7 +528,7 @@ button { font-family: inherit; }
 <header class="header">
   <div class="headerTop">
     <div>
-        <h1 class="title">🏠 家庭小程序</h1>
+        <h1 class="title">🏠 Song少&amp;夏夏.窝里</h1>
         <p class="subtitle">御膳房 · 家庭留言 · 更多模块陆续上线</p>
         <div class="memberRow" id="memberRow" hidden>
           <span class="memberBadge" id="memberBadge"></span>
@@ -789,7 +789,7 @@ button { font-family: inherit; }
 </div>
 <div class="confirmMask" id="nickPrompt" hidden>
   <div class="confirmBox">
-    <p class="confirmText" id="nickPromptTitle">👋 欢迎使用家庭小程序</p>
+    <p class="confirmText" id="nickPromptTitle">👋 欢迎使用 Song少&amp;夏夏.窝里</p>
     <p class="authHint" id="nickPromptHint">设置一个昵称，用于标识你的留言与记账。昵称仅保存在这台手机上，无需注册登录。</p>
     <input class="authInput" id="nickInput" placeholder="昵称（如：爸爸）" maxlength="12">
     <div class="confirmBtns">
@@ -1716,7 +1716,7 @@ function saveSession(s) {
 }
 function displayName() { return session ? session.nick : ''; }
 function openNickPrompt(firstTime) {
-  $('nickPromptTitle').textContent = firstTime ? '👋 欢迎使用家庭小程序' : '修改昵称';
+  $('nickPromptTitle').textContent = firstTime ? '👋 欢迎使用 Song少&夏夏.窝里' : '修改昵称';
   $('nickPromptHint').hidden = !firstTime;
   $('nickInput').value = session ? session.nick : '';
   $('nickPrompt').hidden = false;
