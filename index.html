@@ -353,10 +353,6 @@ button { font-family: inherit; }
   background: var(--c-primary-light); color: var(--c-primary);
   font-weight: 600; white-space: nowrap;
 }
-.memberBadge.admin { background: var(--c-soup-light); color: var(--c-soup); }
-.authTabs { display: flex; gap: 4px; background: #F6EDE4; border-radius: 999px; padding: 4px; margin-top: 12px; }
-.authTab { flex: 1; height: 36px; border: none; border-radius: 999px; background: transparent; color: var(--c-text-2); font-size: 14px; white-space: nowrap; }
-.authTab.active { background: var(--c-primary); color: #fff; font-weight: 600; }
 .authInput {
   width: 100%; height: 40px; margin-top: 10px;
   border: 1px solid var(--c-border); border-radius: 12px;
@@ -365,17 +361,6 @@ button { font-family: inherit; }
 }
 .authInput:focus { border-color: var(--c-primary); }
 .authHint { font-size: 12px; color: var(--c-text-3); margin-top: 10px; line-height: 1.6; }
-body.authing .tabbar, body.authing .header { display: none; }
-.authWrap { padding-top: 48px; }
-.authTitle { font-size: 30px; font-weight: 700; text-align: center; letter-spacing: 1px; }
-.authSub { font-size: 12px; color: var(--c-text-3); text-align: center; margin-top: 8px; }
-.authCard { margin-top: 24px; }
-.guestLink {
-  display: block; margin: 20px auto 0;
-  background: none; border: none;
-  color: var(--c-text-3); font-size: 13px;
-  text-decoration: underline;
-}
 
 /* ---------- 个人中心 ---------- */
 .meProfile { display: flex; align-items: center; gap: 14px; }
@@ -395,12 +380,6 @@ body.authing .tabbar, body.authing .header { display: none; }
   border: none; border-radius: 12px;
   background: var(--c-primary); color: #fff;
   font-size: 13px; font-weight: 600;
-}
-.dangerBtn {
-  width: 100%; height: 44px;
-  border: none; border-radius: 14px;
-  background: #FFECEC; color: var(--c-fav);
-  font-size: 15px; font-weight: 600;
 }
 .okMsg { font-size: 12px; color: var(--c-veg); text-align: center; margin: 12px 0 0; }
 
@@ -460,20 +439,6 @@ body.authing .tabbar, body.authing .header { display: none; }
 .pNums b { font-size: 14px; }
 .pNums .out b { color: var(--c-fav); }
 .pNums .in b { color: var(--c-veg); }
-
-/* ---------- 成员管理 ---------- */
-.mbrRow {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 10px 0; border-bottom: 1px solid var(--c-border);
-}
-.mbrRow:last-child { border-bottom: none; }
-.mbrInfo { min-width: 0; }
-.mbrNameRow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.mbrName { font-size: 14px; font-weight: 600; color: var(--c-text); }
-.mbrStatus { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--c-veg-light); color: var(--c-veg); }
-.mbrStatus.pending { background: var(--c-soup-light); color: var(--c-soup); }
-.mbrActs { display: flex; gap: 6px; flex: none; }
-.msgErr.ok { color: var(--c-veg); }
 
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
@@ -554,41 +519,13 @@ body.authing .tabbar, body.authing .header { display: none; }
         <p class="subtitle">御膳房 · 家庭留言 · 更多模块陆续上线</p>
         <div class="memberRow" id="memberRow" hidden>
           <span class="memberBadge" id="memberBadge"></span>
-          <button class="miniBtn" id="logoutBtn">退出登录</button>
+          <button class="miniBtn" id="logoutBtn">修改昵称</button>
         </div>
       </div>
   </div>
 </header>
 
 <main class="main">
-  <!-- 注册 / 登录首屏 -->
-  <section id="view-auth" class="view" hidden>
-    <div class="authWrap">
-      <div class="authTitle">🏠 家庭小程序</div>
-      <p class="authSub">御膳房 · 家庭留言 · 更多模块陆续上线</p>
-      <div class="card authCard" id="authCard">
-        <div class="authTabs" id="authTabs">
-          <button class="authTab active" data-auth="login">登录</button>
-          <button class="authTab" data-auth="reg">注册</button>
-        </div>
-        <input class="authInput" id="authUser" placeholder="用户名（登录用，如 baba01）" maxlength="16">
-        <input class="authInput" id="authPw" type="password" placeholder="密码（至少 4 位）" maxlength="32">
-        <input class="authInput" id="authPw2" type="password" placeholder="确认密码（仅注册需要）" maxlength="32" hidden>
-        <button class="primaryBtn" id="authSubmit">登录</button>
-        <p class="msgErr" id="authErr" hidden></p>
-        <p class="authHint" id="authHint">仅存储用户名与密码哈希，不含明文。首位注册的成员将成为管理员。</p>
-      </div>
-      <div class="card authCard" id="nickPanel" hidden>
-        <div class="cardHead"><span class="cardTitle">设置昵称</span></div>
-        <p class="authHint">首次登录请设置昵称：留言与徽章将展示昵称，更亲切。</p>
-        <input class="authInput" id="nickInput" placeholder="昵称（如：爸爸）" maxlength="12">
-        <button class="primaryBtn" id="nickSave">保存并进入</button>
-        <button class="guestLink" id="nickSkip">暂不设置，使用用户名 ›</button>
-      </div>
-      <button class="guestLink" id="guestLink">先以游客身份浏览 ›</button>
-    </div>
-  </section>
-
   <!-- 首页 -->
   <section id="view-home" class="view">
     <div class="card quoteCard">
@@ -785,8 +722,8 @@ body.authing .tabbar, body.authing .header { display: none; }
         <span class="msgMode" id="msgMode"></span>
       </div>
       <div id="msgGuestZone" hidden>
-        <p class="authHint">游客只读：登录或注册家庭成员后即可留言。</p>
-        <button class="primaryBtn" id="openAuthBtn">登录 / 注册</button>
+        <p class="authHint">设置本机昵称后即可留言，昵称仅保存在这台手机上。</p>
+        <button class="primaryBtn" id="openAuthBtn">设置昵称</button>
       </div>
       <div id="msgFormZone">
         <textarea class="msgTextarea" id="msgText" placeholder="给家人留句话…（比如：明天想吃红烧肉）" maxlength="200"></textarea>
@@ -804,45 +741,24 @@ body.authing .tabbar, body.authing .header { display: none; }
 
   <!-- 我的 -->
   <section id="view-me" class="view" hidden>
-    <div id="meGuest" hidden>
-      <div class="empty">
-        <div class="emptyEmoji">👤</div>
-        <p>未登录</p>
-        <p class="emptySub">登录家庭成员后可查看个人信息与账户设置</p>
-        <button class="primaryBtn" id="meLoginBtn">去登录 / 注册</button>
-      </div>
-    </div>
-    <div id="meBody" hidden>
+    <div id="meBody">
       <div class="card meProfile">
         <div class="avatar" id="meAvatar"></div>
         <div class="meInfo">
           <div class="meNameRow">
             <span class="meName" id="meName"></span>
-            <span class="memberBadge" id="meRole"></span>
           </div>
           <p class="meMeta" id="meMeta"></p>
         </div>
       </div>
       <div class="card">
-        <div class="cardHead"><span class="cardTitle">⚙️ 账户设置</span></div>
+        <div class="cardHead"><span class="cardTitle">⚙️ 昵称设置</span></div>
         <label class="setLabel" for="meNickInput">昵称</label>
         <input class="authInput" id="meNickInput" placeholder="昵称（如：爸爸）" maxlength="12">
         <button class="smallBtn" id="meNickSave">保存昵称</button>
-        <label class="setLabel" for="mePwOld">修改密码</label>
-        <input class="authInput" id="mePwOld" type="password" placeholder="当前密码" maxlength="32">
-        <input class="authInput" id="mePwNew" type="password" placeholder="新密码（至少 4 位）" maxlength="32">
-        <input class="authInput" id="mePwNew2" type="password" placeholder="确认新密码" maxlength="32">
-        <button class="smallBtn" id="mePwSave">修改密码</button>
+        <p class="authHint">无需注册登录：昵称仅保存在本机，用于标识留言与记账。清除浏览器数据后需重新设置。</p>
         <p class="msgErr" id="meErr" hidden></p>
         <p class="okMsg" id="meOk" hidden></p>
-      </div>
-      <div class="card" id="memberMgr" hidden>
-        <div class="cardHead"><span class="cardTitle">👥 成员管理</span><span class="catCount" id="memberCount"></span></div>
-        <div id="memberList"></div>
-      </div>
-      <div class="card">
-        <button class="dangerBtn" id="meLogout">退出登录</button>
-        <p class="authHint">退出后本机需重新登录；其他设备不受影响。</p>
       </div>
     </div>
   </section>
@@ -858,12 +774,14 @@ body.authing .tabbar, body.authing .header { display: none; }
     </div>
   </div>
 </div>
-<div class="confirmMask" id="pwModal" hidden>
+<div class="confirmMask" id="nickPrompt" hidden>
   <div class="confirmBox">
-    <p class="confirmText" id="pwModalText"></p>
+    <p class="confirmText" id="nickPromptTitle">👋 欢迎使用家庭小程序</p>
+    <p class="authHint" id="nickPromptHint">设置一个昵称，用于标识你的留言与记账。昵称仅保存在这台手机上，无需注册登录。</p>
+    <input class="authInput" id="nickInput" placeholder="昵称（如：爸爸）" maxlength="12">
     <div class="confirmBtns">
-      <button class="confirmBtn cancel" id="pwModalCancel">关闭</button>
-      <button class="confirmBtn ok" id="pwModalOk">确认重置</button>
+      <button class="confirmBtn cancel" id="nickPromptCancel">稍后再说</button>
+      <button class="confirmBtn ok" id="nickPromptSave">保存并进入</button>
     </div>
   </div>
 </div>
@@ -1491,11 +1409,9 @@ function writeGifts(mutate, logText) {
   });
 }
 function giftCanDel(g) {
-  return session && (session.role === 'admin' || g.by === session.id);
+  return !!session && g.by === session.id;
 }
 function renderGiftView() {
-  $('gAddToggle').hidden = !session;
-  $('gGuestHint').hidden = !!session;
   loadGifts(false).then(function (list) {
     renderGiftAll(list);
   });
@@ -1615,7 +1531,6 @@ $('gFormDir').addEventListener('click', function (e) {
   });
 });
 $('gSave').addEventListener('click', function () {
-  if (!session) return;
   var err = $('gErr');
   err.hidden = true;
   var date = $('gDate').value;
@@ -1708,67 +1623,44 @@ function msgWriteCloud(list) {
   return ghPutJson(MSG_GH.file, { messages: list });
 }
 
-/* ================= 成员注册 / 登录（members.json 存哈希） ================= */
-var MEMBERS_FILE = 'members.json';
+/* ================= 本机昵称（v2.3：无登录注册，扫码即用） ================= */
 var SESSION_KEY = 'family-menu-session';
 var session = null;
 try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
-catch (e) { console.error('[Auth] 会话读取失败', e); session = null; }
-var authMode = 'login';
+catch (e) { console.error('[Nick] 会话读取失败', e); session = null; }
+if (session && !session.nick) session = null; // 旧版账号会话不再使用
 
 function saveSession(s) {
   session = s;
   try {
     if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     else localStorage.removeItem(SESSION_KEY);
-  } catch (e) { console.error('[Auth] 会话保存失败', e); }
-  applyAuthUI();
+  } catch (e) { console.error('[Nick] 会话保存失败', e); }
+  applyLocalUI();
 }
-function sha256hex(s) {
-  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function (b) {
-    return Array.from(new Uint8Array(b)).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('');
-  });
+function displayName() { return session ? session.nick : ''; }
+function openNickPrompt(firstTime) {
+  $('nickPromptTitle').textContent = firstTime ? '👋 欢迎使用家庭小程序' : '修改昵称';
+  $('nickPromptHint').hidden = !firstTime;
+  $('nickInput').value = session ? session.nick : '';
+  $('nickPrompt').hidden = false;
+  $('nickInput').focus();
 }
-function memberHash(nick, pw) { return sha256hex('fm1:' + nick + '|' + pw); }
-var preAuthTab = 'home';
-function showAuthView() {
-  if (state.tab !== 'auth') preAuthTab = state.tab;
-  state.tab = 'auth';
-  $('authErr').hidden = true;
-  $('authCard').hidden = false;
-  $('nickPanel').hidden = true;
-  $('guestLink').hidden = false;
-  document.body.classList.add('authing');
-  $('view-auth').hidden = false;
-  $('view-home').hidden = true;
-  $('view-kitchen').hidden = true;
-  $('view-msg').hidden = true;
-  $('view-me').hidden = true;
+function closeNickPrompt() { $('nickPrompt').hidden = true; }
+function saveNickFromPrompt() {
+  var nick = $('nickInput').value.trim();
+  if (!nick) { $('nickInput').focus(); return; }
+  saveSession({ id: (session && session.id) || 'u' + Date.now().toString(36), nick: nick });
+  closeNickPrompt();
+  console.log('[Nick] 昵称已保存: ' + nick);
 }
-function enterApp() {
-  document.body.classList.remove('authing');
-  $('view-auth').hidden = true;
-  switchTab(preAuthTab || 'home');
-}
-function openAuth() { showAuthView(); }
-function setAuthMode(mode) {
-  authMode = mode;
-  document.querySelectorAll('.authTab').forEach(function (t) {
-    t.classList.toggle('active', t.getAttribute('data-auth') === mode);
-  });
-  $('authSubmit').textContent = mode === 'login' ? '登录' : '注册并登录';
-  $('authPw2').hidden = mode === 'login';
-  $('authHint').textContent = mode === 'login'
-    ? '仅存储用户名与密码哈希，不含明文。'
-    : '首位注册的成员将成为管理员（可删除留言）。注册后首次登录可设置昵称。';
-}
-function applyAuthUI() {
+function applyLocalUI() {
   var row = $('memberRow');
   if (session) {
     row.hidden = false;
     var badge = $('memberBadge');
-    badge.textContent = displayName() + (session.role === 'admin' ? ' · 管理员' : ' · 已登录');
-    badge.className = 'memberBadge' + (session.role === 'admin' ? ' admin' : '');
+    badge.textContent = displayName();
+    badge.className = 'memberBadge';
     $('msgGuestZone').hidden = true;
     $('msgFormZone').hidden = false;
   } else {
@@ -1779,143 +1671,15 @@ function applyAuthUI() {
   if (state.tab === 'me') renderMe();
   if (msgCloudList) renderMsgs(msgCloudList);
 }
-function displayName() { return session ? (session.nick || session.username) : ''; }
-function afterAuth() {
-  if (session.nick) { enterApp(); return; }
-  $('authCard').hidden = true;
-  $('nickPanel').hidden = false;
-  $('guestLink').hidden = true;
-  $('nickInput').value = '';
-}
-function authSubmit() {
-  var user = $('authUser').value.trim();
-  var pw = $('authPw').value;
-  var err = $('authErr');
-  err.hidden = true;
-  err.className = 'msgErr';
-  if (!/^\S{2,16}$/.test(user)) { err.hidden = false; err.textContent = '用户名为 2-16 位且不含空格'; return; }
-  if (pw.length < 4) { err.hidden = false; err.textContent = '密码至少 4 位'; return; }
-  if (authMode === 'reg' && $('authPw2').value !== pw) { err.hidden = false; err.textContent = '两次密码不一致'; return; }
-  $('authSubmit').disabled = true;
-  ghGetJson(MEMBERS_FILE)
-    .then(function (data) {
-      var members = (data && data.members) || [];
-      if (authMode === 'login') {
-        var m = null;
-        members.forEach(function (x) { if (x.username === user) m = x; });
-        if (!m) throw new Error('NO_MEMBER');
-        if (memberStatus(m) === 'pending') throw new Error('PENDING');
-        return memberHash(user, pw).then(function (h) {
-          if (h !== m.hash) throw new Error('BAD_PW');
-          saveSession({ id: m.id, username: m.username, nick: m.nick || '', role: m.role });
-          afterAuth();
-          console.log('[Auth] 登录成功: ' + user);
-        });
-      }
-      var exists = members.some(function (x) { return x.username === user; });
-      if (exists) throw new Error('DUP');
-      var isFirst = members.length === 0;
-      var role = isFirst ? 'admin' : 'member';
-      var status = isFirst ? 'active' : 'pending';
-      return memberHash(user, pw).then(function (h) {
-        var rec = { id: Date.now().toString(36), username: user, hash: h, nick: '', role: role, status: status, created: new Date().toISOString() };
-        members.push(rec);
-        return ghPutJson(MEMBERS_FILE, { members: members }).then(function () {
-          if (isFirst) {
-            saveSession({ id: rec.id, username: rec.username, nick: '', role: rec.role });
-            afterAuth();
-            console.log('[Auth] 注册成功(首位管理员): ' + user);
-          } else {
-            err.className = 'msgErr ok';
-            err.hidden = false;
-            err.textContent = '注册成功！待管理员审批通过后即可登录。';
-            console.log('[Auth] 注册成功(待审批): ' + user);
-          }
-        });
-      });
-    })
-    .catch(function (e) {
-      console.error('[Auth] 失败', e && e.message);
-      err.hidden = false;
-      err.className = 'msgErr';
-      err.textContent = e && e.message === 'BAD_PW' ? '密码错误'
-        : (e && e.message === 'PENDING' ? '账号待管理员审批，通过后即可登录'
-        : (e && e.message === 'DUP' ? '该用户名已注册，请直接登录'
-        : (e && e.message === 'NO_MEMBER' ? '未找到该用户名，请先注册' : '操作失败，请稍后重试')));
-    })
-    .then(function () { $('authSubmit').disabled = false; });
-}
 /* ================= 个人中心 ================= */
 function renderMe() {
-  var guest = !session;
-  $('meGuest').hidden = !guest;
-  $('meBody').hidden = guest;
-  if (guest) return;
   var name = displayName();
-  $('meAvatar').textContent = name.charAt(0);
-  $('meName').textContent = name;
-  var role = $('meRole');
-  role.textContent = session.role === 'admin' ? '管理员' : '成员';
-  role.className = 'memberBadge' + (session.role === 'admin' ? ' admin' : '');
-  $('meMeta').textContent = '用户名：' + session.username + ' · 注册于 -';
-  $('meNickInput').value = session.nick || '';
-  var sid = session.id;
-  var sname = session.username;
-  ghGetJson(MEMBERS_FILE).then(function (data) {
-    if (!session || session.id !== sid) return; // 请求返回前已退出则忽略
-    var members = (data && data.members) || [];
-    var m = null;
-    members.forEach(function (x) { if (x.id === sid) m = x; });
-    if (m && m.created) $('meMeta').textContent = '用户名：' + sname + ' · 注册于 ' + m.created.slice(0, 10);
-    renderMemberMgr(members);
-    updateMeBadgeFrom(members);
-  }).catch(function (e) { console.error('[Me] 成员信息读取失败', e); });
+  $('meAvatar').textContent = name ? name.charAt(0) : '👤';
+  $('meName').textContent = name || '未设置昵称';
+  $('meMeta').textContent = name ? '本机昵称 · 无需登录' : '设置昵称后，留言与记账将显示你的名字';
+  $('meNickInput').value = session ? session.nick : '';
 }
 
-/* ================= 成员管理（管理员，v2.0） ================= */
-function memberStatus(m) { return m.status || 'active'; }
-function renderMemberMgr(members) {
-  var isAdmin = session && session.role === 'admin';
-  $('memberMgr').hidden = !isAdmin;
-  if (!isAdmin) return;
-  $('memberCount').textContent = members.length + ' 人';
-  $('memberList').innerHTML = members.map(function (m) {
-    var st = memberStatus(m);
-    var acts = '';
-    if (st === 'pending') acts += '<button class="miniBtn" data-mact="approve" data-mid="' + m.id + '">通过</button>';
-    acts += '<button class="miniBtn" data-mact="reset" data-mid="' + m.id + '">重置密码</button>';
-    if (m.id !== session.id) acts += '<button class="miniBtn msgDel" data-mact="del" data-mid="' + m.id + '">移除</button>';
-    return '<div class="mbrRow"><div class="mbrInfo"><div class="mbrNameRow"><span class="mbrName">' + escMsg(m.nick || m.username) + '</span>'
-      + '<span class="memberBadge' + (m.role === 'admin' ? ' admin' : '') + '">' + (m.role === 'admin' ? '管理员' : '成员') + '</span>'
-      + '<span class="mbrStatus' + (st === 'pending' ? ' pending' : '') + '">' + (st === 'pending' ? '待审批' : '正常') + '</span></div>'
-      + '<p class="meMeta">' + escMsg(m.username) + ' · 注册于 ' + (m.created || '').slice(0, 10) + '</p></div>'
-      + '<div class="mbrActs">' + acts + '</div></div>';
-  }).join('');
-}
-function updateMeBadgeFrom(members) {
-  var b = $('meBadge');
-  if (!(session && session.role === 'admin')) { b.hidden = true; return; }
-  var n = members.filter(function (m) { return memberStatus(m) === 'pending'; }).length;
-  if (n > 0) { b.hidden = false; b.textContent = String(n); }
-  else { b.hidden = true; }
-}
-function refreshMembers() {
-  ghGetJson(MEMBERS_FILE).then(function (d) {
-    var ms = (d && d.members) || [];
-    renderMemberMgr(ms);
-    updateMeBadgeFrom(ms);
-  }).catch(function (e) { console.error('[Me] 成员读取失败', e); });
-}
-function memberWrite(mutate, logText) {
-  return ghGetJson(MEMBERS_FILE).then(function (d) {
-    var ms = mutate((d && d.members) || []);
-    return ghPutJson(MEMBERS_FILE, { members: ms }).then(function () {
-      console.log(logText);
-      renderMemberMgr(ms);
-      updateMeBadgeFrom(ms);
-    });
-  }).catch(function (e) { console.error('[Me] 成员写入失败', e); });
-}
 function meSetMsg(ok, text) {
   $('meErr').hidden = ok;
   $('meOk').hidden = !ok;
@@ -1924,80 +1688,9 @@ function meSetMsg(ok, text) {
 function meNickSave() {
   var nick = $('meNickInput').value.trim();
   if (!nick) { meSetMsg(false, '昵称不能为空'); return; }
-  $('meNickSave').disabled = true;
-  ghGetJson(MEMBERS_FILE)
-    .then(function (data) {
-      var members = (data && data.members) || [];
-      var hit = false;
-      members.forEach(function (m) { if (m.id === session.id) { m.nick = nick; hit = true; } });
-      if (!hit) throw new Error('NO_MEMBER');
-      return ghPutJson(MEMBERS_FILE, { members: members });
-    })
-    .then(function () {
-      session.nick = nick;
-      saveSession(session);
-      renderMe();
-      meSetMsg(true, '昵称已保存');
-      console.log('[Me] 昵称已更新: ' + nick);
-    })
-    .catch(function (e) { console.error('[Me] 昵称保存失败', e); meSetMsg(false, '保存失败，请稍后重试'); })
-    .then(function () { $('meNickSave').disabled = false; });
-}
-function mePwSave() {
-  var oldPw = $('mePwOld').value;
-  var newPw = $('mePwNew').value;
-  var newPw2 = $('mePwNew2').value;
-  if (!oldPw) { meSetMsg(false, '请填写当前密码'); return; }
-  if (newPw.length < 4) { meSetMsg(false, '新密码至少 4 位'); return; }
-  if (newPw !== newPw2) { meSetMsg(false, '两次新密码不一致'); return; }
-  $('mePwSave').disabled = true;
-  ghGetJson(MEMBERS_FILE)
-    .then(function (data) {
-      var members = (data && data.members) || [];
-      var m = null;
-      members.forEach(function (x) { if (x.id === session.id) m = x; });
-      if (!m) throw new Error('NO_MEMBER');
-      return memberHash(session.username, oldPw).then(function (h) {
-        if (h !== m.hash) throw new Error('BAD_PW');
-        return memberHash(session.username, newPw).then(function (nh) {
-          m.hash = nh;
-          return ghPutJson(MEMBERS_FILE, { members: members });
-        });
-      });
-    })
-    .then(function () {
-      $('mePwOld').value = '';
-      $('mePwNew').value = '';
-      $('mePwNew2').value = '';
-      meSetMsg(true, '密码已修改，下次登录使用新密码');
-      console.log('[Me] 密码已修改: ' + session.username);
-    })
-    .catch(function (e) {
-      console.error('[Me] 密码修改失败', e && e.message);
-      meSetMsg(false, e && e.message === 'BAD_PW' ? '当前密码错误' : '修改失败，请稍后重试');
-    })
-    .then(function () { $('mePwSave').disabled = false; });
-}
-function nickSave() {
-  var nick = $('nickInput').value.trim();
-  if (!nick) { $('nickInput').focus(); return; }
-  $('nickSave').disabled = true;
-  ghGetJson(MEMBERS_FILE)
-    .then(function (data) {
-      var members = (data && data.members) || [];
-      var hit = false;
-      members.forEach(function (m) { if (m.id === session.id) { m.nick = nick; hit = true; } });
-      if (!hit) throw new Error('NO_MEMBER');
-      return ghPutJson(MEMBERS_FILE, { members: members });
-    })
-    .then(function () {
-      session.nick = nick;
-      saveSession(session);
-      enterApp();
-      console.log('[Auth] 昵称已设置: ' + nick);
-    })
-    .catch(function (e) { console.error('[Auth] 昵称保存失败', e); })
-    .then(function () { $('nickSave').disabled = false; });
+  saveSession({ id: (session && session.id) || 'u' + Date.now().toString(36), nick: nick });
+  meSetMsg(true, '昵称已保存');
+  console.log('[Me] 昵称已更新: ' + nick);
 }
 function fmtMsgTime(iso) {
   var d = new Date(iso);
@@ -2011,11 +1704,11 @@ function renderMsgList(list) {
   $('msgEmpty').hidden = list.length > 0;
   var rt = readTs();
   $('msgList').innerHTML = list.map(function (m) {
-    var canDel = session && m.id && (session.role === 'admin' || m.nick === displayName());
+    var canDel = !!session && m.nick === displayName();
     var del = canDel ? '<button class="miniBtn msgDel" data-del="' + m.id + '">删除</button>' : '';
     var rep = session ? '<button class="miniBtn" data-reply="' + m.id + '">回复</button>' : '';
     var replies = (m.replies || []).map(function (r) {
-      var rdel = (session && (session.role === 'admin' || r.nick === displayName()))
+      var rdel = (session && r.nick === displayName())
         ? '<button class="miniBtn msgDel" data-delr="' + m.id + '|' + r.id + '">删除</button>' : '';
       return '<div class="replyItem' + (r.ts > rt ? ' fresh' : '') + '"><div class="replyHead"><span class="replyNick">' + escMsg(r.nick)
         + '</span><span class="msgRight"><span class="msgTime">' + fmtMsgTime(r.ts) + '</span>' + rdel
@@ -2168,7 +1861,7 @@ function sendMsg() {
   var err = $('msgErr');
   err.hidden = true;
   if (!MSG_GH.token) { err.hidden = false; err.textContent = '写入令牌未配置，当前为只读模式'; return; }
-  if (!session) { err.hidden = false; err.textContent = '请先登录或注册家庭成员再留言'; openAuth(); return; }
+  if (!session) { err.hidden = false; err.textContent = '请先设置本机昵称再留言'; openNickPrompt(true); return; }
   if (!text) { err.hidden = false; err.textContent = '留言内容不能为空'; return; }
   var list = (msgCloudList || []).slice();
   list.unshift({
@@ -2186,7 +1879,7 @@ function sendMsg() {
       renderMsgs(list);
       markMsgRead();
       updateMsgBadge(list);
-      console.log('[Msg] 云端发表成功: ' + nick);
+      console.log('[Msg] 云端发表成功: ' + displayName());
     })
     .catch(function (e) {
       console.error('[Msg] 发表失败', e);
@@ -2439,89 +2132,12 @@ $('drawBtn').addEventListener('click', doDraw);
 $('redrawBtn').addEventListener('click', doDraw);
 $('goMenuBtn').addEventListener('click', function () { switchTab('kitchen'); switchKTab('menu'); });
 $('msgSend').addEventListener('click', sendMsg);
-$('openAuthBtn').addEventListener('click', openAuth);
-$('guestLink').addEventListener('click', function () {
-  enterApp();
-  console.log('[Auth] 以游客身份浏览');
-});
-$('nickSave').addEventListener('click', nickSave);
-$('meLoginBtn').addEventListener('click', openAuth);
+$('openAuthBtn').addEventListener('click', function () { openNickPrompt(true); });
 $('meNickSave').addEventListener('click', meNickSave);
-$('mePwSave').addEventListener('click', mePwSave);
-$('meLogout').addEventListener('click', function () {
-  askConfirm('确认退出当前账号？', '退出', function () {
-    saveSession(null);
-    showAuthView();
-    console.log('[Me] 已退出登录');
-  });
-});
-var pendingReset = null;
-$('memberList').addEventListener('click', function (e) {
-  var btn = e.target.closest('[data-mact]');
-  if (!btn || !session || session.role !== 'admin') return;
-  var act = btn.getAttribute('data-mact');
-  var mid = btn.getAttribute('data-mid');
-  var row = btn.closest('.mbrRow');
-  var nick = row.querySelector('.mbrName').textContent;
-  var uname = row.querySelector('.meMeta').textContent.split(' · ')[0];
-  if (act === 'approve') {
-    memberWrite(function (ms) {
-      ms.forEach(function (m) { if (m.id === mid) m.status = 'active'; });
-      return ms;
-    }, '[Me] 已通过成员: ' + uname);
-  } else if (act === 'del') {
-    askConfirm('确认移除成员「' + nick + '」？其历史留言将保留。', '移除', function () {
-      memberWrite(function (ms) {
-        return ms.filter(function (m) { return m.id !== mid; });
-      }, '[Me] 已移除成员: ' + uname);
-    });
-  } else if (act === 'reset') {
-    var pw = Math.random().toString(36).slice(2, 6) + Math.random().toString(36).slice(2, 6);
-    pendingReset = { id: mid, uname: uname, pw: pw };
-    $('pwModalText').textContent = '将为「' + nick + '」设置新密码：' + pw + '（请转告本人，确认后立即生效）';
-    $('pwModal').hidden = false;
-  }
-});
-$('pwModalCancel').addEventListener('click', function () {
-  pendingReset = null;
-  $('pwModal').hidden = true;
-});
-$('pwModal').addEventListener('click', function (e) {
-  if (e.target === $('pwModal')) { pendingReset = null; $('pwModal').hidden = true; }
-});
-$('pwModalOk').addEventListener('click', function () {
-  if (!pendingReset) return;
-  var pr = pendingReset;
-  pendingReset = null;
-  $('pwModal').hidden = true;
-  ghGetJson(MEMBERS_FILE).then(function (d) {
-    var ms = (d && d.members) || [];
-    var m = null;
-    ms.forEach(function (x) { if (x.id === pr.id) m = x; });
-    if (!m) throw new Error('NO_MEMBER');
-    return memberHash(m.username, pr.pw).then(function (h) {
-      m.hash = h;
-      return ghPutJson(MEMBERS_FILE, { members: ms });
-    });
-  }).then(function () {
-    console.log('[Me] 已重置密码: ' + pr.uname);
-    refreshMembers();
-  }).catch(function (e) { console.error('[Me] 重置密码失败', e); });
-});
-$('nickSkip').addEventListener('click', function () {
-  enterApp();
-  console.log('[Auth] 跳过昵称设置');
-});
-$('authTabs').addEventListener('click', function (e) {
-  var t = e.target.closest('.authTab');
-  if (t) setAuthMode(t.getAttribute('data-auth'));
-});
-$('authSubmit').addEventListener('click', authSubmit);
-$('logoutBtn').addEventListener('click', function () {
-  saveSession(null);
-  showAuthView();
-  console.log('[Auth] 已退出登录');
-});
+$('logoutBtn').addEventListener('click', function () { openNickPrompt(false); });
+$('nickPromptSave').addEventListener('click', saveNickFromPrompt);
+$('nickPromptCancel').addEventListener('click', closeNickPrompt);
+$('nickPrompt').addEventListener('click', function (e) { if (e.target === $('nickPrompt')) closeNickPrompt(); });
 $('msgList').addEventListener('click', function (e) {
   var rb = e.target.closest('[data-reply]');
   if (rb && session) {
@@ -2550,7 +2166,7 @@ $('msgList').addEventListener('click', function (e) {
     (msgCloudList || []).forEach(function (m) {
       if (m.id !== parts[0]) return;
       (m.replies || []).forEach(function (r) {
-        if (r.id === parts[1] && (session.role === 'admin' || r.nick === displayName())) owner = true;
+        if (r.id === parts[1] && r.nick === displayName()) owner = true;
       });
     });
     if (owner) {
@@ -2563,7 +2179,7 @@ $('msgList').addEventListener('click', function (e) {
   var id = b.getAttribute('data-del');
   var target = null;
   (msgCloudList || []).forEach(function (m) { if (m.id === id) target = m; });
-  if (!target || (session.role !== 'admin' && target.nick !== displayName())) return;
+  if (!target || target.nick !== displayName()) return;
   askConfirm('确认删除这条留言吗？其下回复将一并删除。', '删除', function () {
     var list = (msgCloudList || []).filter(function (m) { return m.id !== id; });
     msgWriteCloud(list).then(function () {
@@ -2601,25 +2217,10 @@ renderQuickGrid();
 renderBrowse();
 renderSearch();
 updateDrawBtn();
-if (session && !session.username) saveSession(null); // 旧版昵称会话失效，需按用户名+密码重新登录
-applyAuthUI();
-if (!session) showAuthView();
-if (session) {
-  // 会话有效性校验：成员被移除或仍待审批则强制退出（v2.0）
-  ghGetJson(MEMBERS_FILE).then(function (d) {
-    var ms = (d && d.members) || [];
-    var m = null;
-    ms.forEach(function (x) { if (x.id === session.id) m = x; });
-    if (!m || memberStatus(m) === 'pending') {
-      saveSession(null);
-      showAuthView();
-      console.log('[Auth] 会话失效：成员不存在或待审批');
-    } else {
-      updateMeBadgeFrom(ms);
-    }
-  }).catch(function (e) { console.error('[Auth] 会话校验失败', e); });
-}
-pollMessages(); // 启动时拉一次，初始化未读红点
+applyLocalUI();
+switchTab('home');
+if (!session) openNickPrompt(true); // 首次使用：设置本机昵称（可稍后再说）
+pollMessages();
 console.log('[Menu] 初始化完成，共 ' + TOTAL + ' 道菜');
 </script>
 </body>
