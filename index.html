@@ -345,6 +345,19 @@ button { font-family: inherit; }
 .confirmBtn.cancel { background: #F2F3F5; color: var(--c-text-2); }
 .confirmBtn.ok { background: var(--c-fav); color: #fff; }
 
+/* ---------- 全局操作反馈 Toast（v2.4） ---------- */
+.toast {
+  position: fixed; left: 50%; top: 16px;
+  transform: translateX(-50%) translateY(-10px);
+  max-width: 78vw; padding: 9px 18px;
+  background: rgba(29, 33, 41, .86); color: #fff;
+  font-size: 13px; text-align: center; border-radius: 999px;
+  z-index: 80; pointer-events: none;
+  opacity: 0; transition: opacity .2s ease, transform .2s ease;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.err { background: rgba(196, 60, 60, .92); }
+
 /* ---------- 成员登录 ---------- */
 .memberRow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .memberRow[hidden] { display: none; }
@@ -785,6 +798,7 @@ button { font-family: inherit; }
     </div>
   </div>
 </div>
+<div class="toast" id="toast" role="status"></div>
 <section class="sheet" id="sheet" aria-label="做法详情">
   <div class="sheetHead">
     <div>
@@ -1584,15 +1598,20 @@ $('gSave').addEventListener('click', function () {
     mutate = function (list) { list.unshift(rec); return list; };
   }
   $('gSave').disabled = true;
+  $('gSave').textContent = editId ? '保存修改中…' : '保存中…';
   writeGifts(mutate, logText).then(function (nl) {
     $('gForm').hidden = true;
     resetGiftForm();
     renderGiftAll(nl);
+    showToast(editId ? '修改已保存' : '已记一笔');
   }).catch(function (e) {
     err.hidden = false;
     err.textContent = '保存失败，请稍后重试';
+    showToast('保存失败，请稍后重试', true);
     console.error('[Gift] 写入失败', e);
-  }).then(function () { $('gSave').disabled = false; });
+    $('gSave').disabled = false;
+    $('gSave').textContent = editId ? '保存修改' : '保存';
+  });
 });
 $('giftList').addEventListener('click', function (e) {
   var eb = e.target.closest('[data-gedit]');
@@ -1626,7 +1645,7 @@ $('giftList').addEventListener('click', function (e) {
   askConfirm('确认删除这笔往来记录？', '删除', function () {
     writeGifts(function (list) {
       return list.filter(function (g) { return g.id !== gid; });
-    }, '[Gift] 删除记录: ' + gid).then(function (nl) { renderGiftAll(nl); });
+    }, '[Gift] 删除记录: ' + gid).then(function (nl) { renderGiftAll(nl); showToast('记录已删除'); });
   });
 });
 
@@ -1709,6 +1728,7 @@ function saveNickFromPrompt() {
   if (!nick) { $('nickInput').focus(); return; }
   saveSession({ id: (session && session.id) || 'u' + Date.now().toString(36), nick: nick });
   closeNickPrompt();
+  showToast('昵称已保存');
   console.log('[Nick] 昵称已保存: ' + nick);
 }
 function applyLocalUI() {
@@ -1727,6 +1747,16 @@ function applyLocalUI() {
   }
   if (state.tab === 'me') renderMe();
   if (msgCloudList) renderMsgs(msgCloudList);
+}
+
+/* ================= 全局操作反馈（Toast 轻提示 + 按钮加载态，v2.4） ================= */
+var toastTimer = null;
+function showToast(text, isErr) {
+  var t = $('toast');
+  t.textContent = text;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.className = 'toast'; }, 1800);
 }
 /* ================= 个人中心 ================= */
 function renderMe() {
@@ -1747,6 +1777,7 @@ function meNickSave() {
   if (!nick) { meSetMsg(false, '昵称不能为空'); return; }
   saveSession({ id: (session && session.id) || 'u' + Date.now().toString(36), nick: nick });
   meSetMsg(true, '昵称已保存');
+  showToast('昵称已保存');
   console.log('[Me] 昵称已更新: ' + nick);
 }
 function fmtMsgTime(iso) {
@@ -1805,8 +1836,9 @@ function sendReply(msgId, text) {
     renderMsgs(list);
     markMsgRead();
     updateMsgBadge(list);
+    showToast('回复已发送');
     console.log('[Msg] 回复成功: ' + msgId);
-  }).catch(function (e) { console.error('[Msg] 回复失败', e); });
+  }).catch(function (e) { console.error('[Msg] 回复失败', e); showToast('回复失败，请稍后重试', true); });
 }
 var confirmCb = null;
 function askConfirm(text, okText, onOk) {
@@ -1828,8 +1860,9 @@ function deleteReply(msgId, replyId) {
   msgWriteCloud(list).then(function () {
     msgCloudList = list;
     renderMsgs(list);
+    showToast('回复已删除');
     console.log('[Msg] 已删除回复 ' + replyId);
-  }).catch(function (e) { console.error('[Msg] 删除回复失败', e); });
+  }).catch(function (e) { console.error('[Msg] 删除回复失败', e); showToast('删除失败，请稍后重试', true); });
 }
 /* ================= 未读提醒（站内红点，v1.18） ================= */
 var MSG_READTS_KEY = 'family-menu-msg-readts';
@@ -1929,6 +1962,7 @@ function sendMsg() {
   });
   list = list.slice(0, 100);
   $('msgSend').disabled = true;
+  $('msgSend').textContent = '发表中…';
   msgWriteCloud(list)
     .then(function () {
       $('msgText').value = '';
@@ -1936,14 +1970,16 @@ function sendMsg() {
       renderMsgs(list);
       markMsgRead();
       updateMsgBadge(list);
+      showToast('留言已发表');
       console.log('[Msg] 云端发表成功: ' + displayName());
     })
     .catch(function (e) {
       console.error('[Msg] 发表失败', e);
       err.hidden = false;
       err.textContent = '发表失败，请稍后重试';
+      showToast('发表失败，请稍后重试', true);
     })
-    .then(function () { $('msgSend').disabled = false; });
+    .then(function () { $('msgSend').disabled = false; $('msgSend').textContent = '发表留言'; });
 }
 
 /* ================= 做法详情弹层 ================= */
@@ -2242,8 +2278,9 @@ $('msgList').addEventListener('click', function (e) {
     msgWriteCloud(list).then(function () {
       msgCloudList = list;
       renderMsgs(list);
+      showToast('留言已删除');
       console.log('[Msg] 已删除留言 ' + id);
-    }).catch(function (e2) { console.error('[Msg] 删除失败', e2); });
+    }).catch(function (e2) { console.error('[Msg] 删除失败', e2); showToast('删除失败，请稍后重试', true); });
   });
 });
 $('confirmCancel').addEventListener('click', closeConfirm);
