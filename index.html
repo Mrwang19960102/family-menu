@@ -1536,7 +1536,7 @@ function renderGiftList(list) {
     var del = giftCanDel(g) ? '<button class="miniBtn msgDel" data-gdel="' + g.id + '">删除</button>' : '';
     return '<div class="gRow"><div class="gLeft"><div class="gTop"><span class="gName">' + escMsg(g.name) + '</span>'
       + '<span class="gTag">' + escMsg(g.event) + '</span><span class="gTag">' + escMsg(g.rel) + '</span></div>'
-      + '<p class="gMeta">' + escMsg(g.date) + (g.note ? ' · ' + escMsg(g.note) : '') + ' · ' + escMsg(g.byNick || '') + '</p></div>'
+      + '<p class="gMeta">' + [g.date, g.note, g.byNick].filter(Boolean).map(escMsg).join(' · ') + '</p></div>'
       + '<div class="gRight"><span class="gAmt ' + g.dir + '">' + (g.dir === 'out' ? '−¥' : '+¥') + g.amount + '</span> ' + del + '</div></div>';
   }).join('');
 }
@@ -1559,7 +1559,7 @@ function renderGiftPersons(list) {
     return '<div class="pCard" data-person="' + escMsg(p.name) + '"><div class="pTop"><span class="gName">' + escMsg(p.name)
       + '</span><span class="gTag">' + escMsg(p.rel) + '</span></div>'
       + '<div class="pNums"><span class="out">我方随礼 <b>¥' + p.out + '</b></span><span class="in">对方随礼 <b>¥' + p.inn + '</b></span>'
-      + '<span>差额 <b>' + (diff >= 0 ? '+' : '') + diff + '</b></span><span>' + p.n + ' 笔 · 近 ' + p.last + '</span></div></div>';
+      + '<span>差额 <b>' + (diff >= 0 ? '+' : '') + diff + '</b></span><span>' + p.n + ' 笔' + (p.last ? ' · 近 ' + p.last : '') + '</span></div></div>';
   }).join('');
 }
 function switchGTab(t) {
