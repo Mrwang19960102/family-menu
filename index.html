@@ -420,6 +420,34 @@ body.authing .tabbar, body.authing .header { display: none; }
 .kSeg { margin-bottom: 12px; }
 .kStats { font-size: 12px; color: var(--c-text-2); text-align: center; margin: 0 0 12px; }
 
+/* ---------- 礼尚往来 ---------- */
+.fGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.fGrid .authInput, .fGrid .primaryBtn, .fGrid .ghostBtn { margin: 0; width: 100%; }
+#gForm .authInput { margin: 0 0 10px; }
+.gRow {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px; margin-bottom: 8px;
+  background: var(--c-card); border-radius: 12px; box-shadow: var(--shadow-card);
+}
+.gLeft { min-width: 0; }
+.gTop { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.gName { font-size: 14px; font-weight: 600; color: var(--c-text); }
+.gTag { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--c-bg); color: var(--c-text-2); }
+.gMeta { font-size: 11px; color: var(--c-text-3); margin: 4px 0 0; }
+.gRight { text-align: right; flex: none; }
+.gAmt { font-size: 15px; font-weight: 700; }
+.gAmt.out { color: var(--c-fav); }
+.gAmt.in { color: var(--c-veg); }
+.pCard {
+  padding: 12px 14px; margin-bottom: 10px;
+  background: var(--c-card); border-radius: var(--r-card); box-shadow: var(--shadow-card);
+}
+.pTop { display: flex; align-items: center; justify-content: space-between; }
+.pNums { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--c-text-2); }
+.pNums b { font-size: 14px; }
+.pNums .out b { color: var(--c-fav); }
+.pNums .in b { color: var(--c-veg); }
+
 /* ---------- 成员管理 ---------- */
 .mbrRow {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -574,6 +602,11 @@ body.authing .tabbar, body.authing .header { display: none; }
         <span class="modName">我的</span>
         <span class="modDesc">账户与成员管理</span>
       </button>
+      <button class="modCard" data-mod="gift">
+        <span class="modEmoji">🧧</span>
+        <span class="modName">礼尚往来</span>
+        <span class="modDesc">份子钱收支 · 人名账</span>
+      </button>
       <button class="modCard soon" disabled>
         <span class="modEmoji">📒</span>
         <span class="modName">家庭记账</span>
@@ -662,6 +695,54 @@ body.authing .tabbar, body.authing .header { display: none; }
         <button class="primaryBtn" id="goMenuBtn">去逛逛御膳房</button>
       </div>
       <p class="footNote">收藏仅保存在当前设备浏览器，换设备不共享</p>
+    </div>
+  </section>
+
+  <!-- 礼尚往来（模块） -->
+  <section id="view-gift" class="view" hidden>
+    <div class="seg kSeg" id="gSeg">
+      <button class="segBtn meat active" data-gtab="list">流水</button>
+      <button class="segBtn veg" data-gtab="person">人名账</button>
+    </div>
+
+    <div id="gtab-list">
+      <p class="kStats" id="giftStats"></p>
+      <div class="seg" id="gDirSeg" style="margin-bottom:10px;">
+        <button class="segBtn meat active" data-gdir="all">全部</button>
+        <button class="segBtn soup" data-gdir="out">支出 · 随礼</button>
+        <button class="segBtn veg" data-gdir="in">收入 · 收礼</button>
+      </div>
+      <p class="kStats" id="gPersonFilter" hidden></p>
+      <button class="primaryBtn" id="gAddToggle">＋ 记一笔礼尚往来</button>
+      <p class="hint" id="gGuestHint" hidden>登录后可记账；当前为只读浏览</p>
+      <div class="card" id="gForm" hidden>
+        <div class="seg" id="gFormDir" style="margin-bottom:10px;">
+          <button class="segBtn soup active" data-fdir="out">支出 · 随礼</button>
+          <button class="segBtn veg" data-fdir="in">收入 · 收礼</button>
+        </div>
+        <div class="fGrid">
+          <input type="date" class="authInput" id="gDate">
+          <input type="number" class="authInput" id="gAmount" placeholder="金额（元）" min="0" step="1">
+        </div>
+        <input type="text" class="authInput" id="gName" placeholder="对方姓名（如：表哥 王强）" list="giftNames" maxlength="20">
+        <datalist id="giftNames"></datalist>
+        <div class="fGrid">
+          <select class="authInput" id="gRel"></select>
+          <select class="authInput" id="gEvent"></select>
+        </div>
+        <input type="text" class="authInput" id="gNote" placeholder="备注（可选）" maxlength="40">
+        <div class="fGrid">
+          <button class="primaryBtn" id="gSave">保存</button>
+          <button class="ghostBtn" id="gCancel">取消</button>
+        </div>
+        <p class="msgErr" id="gErr" hidden></p>
+      </div>
+      <div id="giftList"></div>
+    </div>
+
+    <div id="gtab-person" hidden>
+      <p class="kStats">点人名可看与其的全部往来流水</p>
+      <div id="personList"></div>
     </div>
   </section>
 
@@ -775,6 +856,10 @@ body.authing .tabbar, body.authing .header { display: none; }
   <button class="tabItem" data-tab="kitchen">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M5 12h14a7 7 0 0 1-14 0Z"/><path d="M9 21h6"/><path d="M12 19v2"/><path d="M9 3c0 1.5 1 1.5 1 3"/><path d="M14 3c0 1.5 1 1.5 1 3"/></svg>
     御膳房
+  </button>
+  <button class="tabItem" data-tab="gift">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect class="f" x="3" y="6" width="18" height="13" rx="2"/><path d="M3 7.5l9 6 9-6"/></svg>
+    礼尚往来
   </button>
   <button class="tabItem" data-tab="msg">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
@@ -1151,7 +1236,7 @@ var QUOTES = [
 ];
 
 /* ================= 状态 ================= */
-var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all' };
+var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', gtab: 'list', gdir: 'all', gperson: '', fdir: 'out' };
 var pickCount = { meat: 1, veg: 1, soup: 0 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -1355,6 +1440,200 @@ function toggleFav(dish) {
   if (currentSheetDish === dish) updateSheetFavBtn();
   console.log('[Fav] ' + dish + ' -> ' + (nowFav ? '收藏' : '取消'));
 }
+
+/* ================= 礼尚往来（v2.1） ================= */
+var GIFTS_FILE = 'gifts.json';
+var GIFT_REL = ['亲戚', '朋友', '同事', '邻居', '其他'];
+var GIFT_EVT = ['婚礼', '生日', '满月百岁', '乔迁', '白事', '升学', '年节问候', '其他'];
+var giftCache = null;
+function loadGifts(force) {
+  if (giftCache && !force) return Promise.resolve(giftCache);
+  return ghGetJson(GIFTS_FILE).then(function (d) {
+    giftCache = (d && d.gifts) || [];
+    return giftCache;
+  }).catch(function (e) {
+    console.error('[Gift] 读取失败（视为空）', e);
+    giftCache = giftCache || [];
+    return giftCache;
+  });
+}
+function writeGifts(mutate, logText) {
+  return loadGifts(true).then(function (list) {
+    var nl = mutate(list.slice());
+    return ghPutJson(GIFTS_FILE, { gifts: nl }).then(function () {
+      giftCache = nl;
+      console.log(logText);
+      return nl;
+    });
+  });
+}
+function giftCanDel(g) {
+  return session && (session.role === 'admin' || g.by === session.id);
+}
+function renderGiftView() {
+  $('gAddToggle').hidden = !session;
+  $('gGuestHint').hidden = !!session;
+  loadGifts(false).then(function (list) {
+    renderGiftAll(list);
+  });
+}
+function renderGiftAll(list) {
+  renderGiftStats(list);
+  renderGiftList(list);
+  renderGiftPersons(list);
+  var names = {};
+  list.forEach(function (g) { names[g.name] = 1; });
+  $('giftNames').innerHTML = Object.keys(names).map(function (n) { return '<option value="' + escMsg(n) + '">'; }).join('');
+}
+function renderGiftStats(list) {
+  var y = String(new Date().getFullYear());
+  var out = 0, inn = 0;
+  list.forEach(function (g) {
+    if ((g.date || '').slice(0, 4) !== y) return;
+    if (g.dir === 'out') out += g.amount; else inn += g.amount;
+  });
+  $('giftStats').textContent = y + ' 年 · 随礼支出 ¥' + out + ' · 收礼收入 ¥' + inn + ' · 净额 ¥' + (inn - out);
+}
+function renderGiftList(list) {
+  var pf = $('gPersonFilter');
+  if (state.gperson) {
+    pf.hidden = false;
+    pf.innerHTML = '筛选：' + escMsg(state.gperson) + ' <button class="miniBtn" id="gPersonClear">清除</button>';
+  } else pf.hidden = true;
+  var rows = list.filter(function (g) {
+    if (state.gdir !== 'all' && g.dir !== state.gdir) return false;
+    if (state.gperson && g.name !== state.gperson) return false;
+    return true;
+  });
+  if (!rows.length) {
+    $('giftList').innerHTML = '<div class="empty"><div class="emptyEmoji">🧧</div><p>暂无往来记录</p></div>';
+    return;
+  }
+  $('giftList').innerHTML = rows.map(function (g) {
+    var del = giftCanDel(g) ? '<button class="miniBtn msgDel" data-gdel="' + g.id + '">删除</button>' : '';
+    return '<div class="gRow"><div class="gLeft"><div class="gTop"><span class="gName">' + escMsg(g.name) + '</span>'
+      + '<span class="gTag">' + escMsg(g.event) + '</span><span class="gTag">' + escMsg(g.rel) + '</span></div>'
+      + '<p class="gMeta">' + escMsg(g.date) + (g.note ? ' · ' + escMsg(g.note) : '') + ' · ' + escMsg(g.byNick || '') + '</p></div>'
+      + '<div class="gRight"><span class="gAmt ' + g.dir + '">' + (g.dir === 'out' ? '−¥' : '+¥') + g.amount + '</span> ' + del + '</div></div>';
+  }).join('');
+}
+function renderGiftPersons(list) {
+  var map = {};
+  list.forEach(function (g) {
+    var p = map[g.name] || (map[g.name] = { name: g.name, rel: g.rel, out: 0, inn: 0, n: 0, last: '' });
+    if (g.dir === 'out') p.out += g.amount; else p.inn += g.amount;
+    p.n++;
+    if (g.date > p.last) p.last = g.date;
+  });
+  var arr = Object.keys(map).map(function (k) { return map[k]; });
+  arr.sort(function (a, b) { return (b.out + b.inn) - (a.out + a.inn); });
+  if (!arr.length) {
+    $('personList').innerHTML = '<div class="empty"><div class="emptyEmoji">🧧</div><p>暂无人名账</p></div>';
+    return;
+  }
+  $('personList').innerHTML = arr.map(function (p) {
+    var diff = p.inn - p.out;
+    return '<div class="pCard" data-person="' + escMsg(p.name) + '"><div class="pTop"><span class="gName">' + escMsg(p.name)
+      + '</span><span class="gTag">' + escMsg(p.rel) + '</span></div>'
+      + '<div class="pNums"><span class="out">我方随礼 <b>¥' + p.out + '</b></span><span class="in">对方随礼 <b>¥' + p.inn + '</b></span>'
+      + '<span>差额 <b>' + (diff >= 0 ? '+' : '') + diff + '</b></span><span>' + p.n + ' 笔 · 近 ' + p.last + '</span></div></div>';
+  }).join('');
+}
+function switchGTab(t) {
+  state.gtab = t;
+  document.querySelectorAll('#gSeg .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el.getAttribute('data-gtab') === t);
+  });
+  $('gtab-list').hidden = t !== 'list';
+  $('gtab-person').hidden = t !== 'person';
+}
+$('gSeg').addEventListener('click', function (e) {
+  var b = e.target.closest('.segBtn');
+  if (b) switchGTab(b.getAttribute('data-gtab'));
+});
+$('gDirSeg').addEventListener('click', function (e) {
+  var b = e.target.closest('.segBtn');
+  if (!b) return;
+  state.gdir = b.getAttribute('data-gdir');
+  document.querySelectorAll('#gDirSeg .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el === b);
+  });
+  loadGifts(false).then(renderGiftList);
+});
+$('gPersonFilter').addEventListener('click', function (e) {
+  if (e.target.id === 'gPersonClear') {
+    state.gperson = '';
+    loadGifts(false).then(renderGiftList);
+  }
+});
+$('personList').addEventListener('click', function (e) {
+  var card = e.target.closest('[data-person]');
+  if (!card) return;
+  state.gperson = card.getAttribute('data-person');
+  switchGTab('list');
+  loadGifts(false).then(renderGiftList);
+});
+$('gAddToggle').addEventListener('click', function () {
+  var f = $('gForm');
+  f.hidden = !f.hidden;
+  if (!f.hidden) {
+    $('gDate').value = new Date().toISOString().slice(0, 10);
+    $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+    $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  }
+});
+$('gCancel').addEventListener('click', function () { $('gForm').hidden = true; });
+$('gFormDir').addEventListener('click', function (e) {
+  var b = e.target.closest('.segBtn');
+  if (!b) return;
+  state.fdir = b.getAttribute('data-fdir');
+  document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el === b);
+  });
+});
+$('gSave').addEventListener('click', function () {
+  if (!session) return;
+  var err = $('gErr');
+  err.hidden = true;
+  var date = $('gDate').value;
+  var amount = parseFloat($('gAmount').value);
+  var name = $('gName').value.trim();
+  if (!date || !name || !(amount > 0)) {
+    err.hidden = false;
+    err.textContent = '请填写日期、对方姓名和大于 0 的金额';
+    return;
+  }
+  var rec = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    date: date, name: name, rel: $('gRel').value, event: $('gEvent').value,
+    dir: state.fdir, amount: amount, note: $('gNote').value.trim(),
+    by: session.id, byNick: displayName(), ts: new Date().toISOString()
+  };
+  writeGifts(function (list) {
+    list.unshift(rec);
+    return list;
+  }, '[Gift] 记账: ' + name + ' ' + rec.dir + ' ' + amount).then(function (nl) {
+    $('gForm').hidden = true;
+    $('gAmount').value = '';
+    $('gName').value = '';
+    $('gNote').value = '';
+    renderGiftAll(nl);
+  }).catch(function (e) {
+    err.hidden = false;
+    err.textContent = '保存失败，请稍后重试';
+    console.error('[Gift] 写入失败', e);
+  });
+});
+$('giftList').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-gdel]');
+  if (!btn) return;
+  var gid = btn.getAttribute('data-gdel');
+  askConfirm('确认删除这笔往来记录？', '删除', function () {
+    writeGifts(function (list) {
+      return list.filter(function (g) { return g.id !== gid; });
+    }, '[Gift] 删除记录: ' + gid).then(function (nl) { renderGiftAll(nl); });
+  });
+});
 
 /* ================= 留言板（GitHub 云同步：仓库 messages.json 即数据库） ================= */
 // 写入令牌：fine-grained PAT，仅 family-menu 仓库 Contents 读写（与婚假旅行同款权衡：内嵌页面、泄漏影响限于该仓库数据文件）
@@ -2030,9 +2309,11 @@ function switchTab(tab) {
   });
   $('view-home').hidden = tab !== 'home';
   $('view-kitchen').hidden = tab !== 'kitchen';
+  $('view-gift').hidden = tab !== 'gift';
   $('view-msg').hidden = tab !== 'msg';
   $('view-me').hidden = tab !== 'me';
   if (tab === 'kitchen') switchKTab(state.ktab);
+  if (tab === 'gift') renderGiftView();
   if (tab === 'me') renderMe();
   if (tab === 'msg') loadMessages(false);
 }
