@@ -405,13 +405,26 @@ body.authing .tabbar, body.authing .header { display: none; }
 .okMsg { font-size: 12px; color: var(--c-veg); text-align: center; margin: 12px 0 0; }
 
 /* ---------- 家庭门户 ---------- */
+.modGroup { font-size: 12px; color: var(--c-text-3); margin: 16px 0 8px; }
+.modGroup:first-of-type { margin-top: 4px; }
 .modGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .modCard {
+  position: relative;
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
   padding: 16px 14px;
   background: var(--c-card); border: none; border-radius: var(--r-card);
   box-shadow: var(--shadow-card); text-align: left;
 }
+.modBadge {
+  position: absolute; top: 10px; right: 10px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-fav); color: #fff;
+  font-size: 11px; line-height: 18px; text-align: center;
+}
+.modBadge[hidden] { display: none; }
+.backBar { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
+.backTitle { font-size: 16px; font-weight: 700; color: var(--c-text); }
 .modCard:active { transform: scale(.97); }
 .modCard.soon { opacity: .55; }
 .modEmoji { font-size: 26px; }
@@ -586,22 +599,16 @@ body.authing .tabbar, body.authing .header { display: none; }
       <p class="quoteText" id="quoteText"></p>
     </div>
 
+    <p class="modGroup">🍽️ 饮食</p>
     <div class="modGrid">
       <button class="modCard" data-mod="kitchen">
         <span class="modEmoji">🍚</span>
         <span class="modName">御膳房</span>
         <span class="modDesc">菜单 · 做法 · 抽菜 · 收藏</span>
       </button>
-      <button class="modCard" data-mod="msg">
-        <span class="modEmoji">💬</span>
-        <span class="modName">家庭留言板</span>
-        <span class="modDesc">全家留言与回复</span>
-      </button>
-      <button class="modCard" data-mod="me">
-        <span class="modEmoji">👤</span>
-        <span class="modName">我的</span>
-        <span class="modDesc">账户与成员管理</span>
-      </button>
+    </div>
+    <p class="modGroup">🧧 往来记录</p>
+    <div class="modGrid">
       <button class="modCard" data-mod="gift">
         <span class="modEmoji">🧧</span>
         <span class="modName">礼尚往来</span>
@@ -613,10 +620,33 @@ body.authing .tabbar, body.authing .header { display: none; }
         <span class="modDesc">敬请期待</span>
       </button>
     </div>
+    <p class="modGroup">💬 家庭互动</p>
+    <div class="modGrid">
+      <button class="modCard" data-mod="msg">
+        <span class="modEmoji">💬</span>
+        <span class="modName">家庭留言板</span>
+        <span class="modDesc">全家留言与回复</span>
+        <span class="modBadge" id="modMsgBadge" hidden></span>
+      </button>
+    </div>
+    <p class="modGroup">📅 生活管理 · 规划中</p>
+    <div class="modGrid">
+      <button class="modCard soon" disabled>
+        <span class="modEmoji">📅</span>
+        <span class="modName">家庭日历</span>
+        <span class="modDesc">敬请期待</span>
+      </button>
+      <button class="modCard soon" disabled>
+        <span class="modEmoji">🧹</span>
+        <span class="modName">值日排班</span>
+        <span class="modDesc">敬请期待</span>
+      </button>
+    </div>
   </section>
 
   <!-- 御膳房（模块） -->
   <section id="view-kitchen" class="view" hidden>
+    <div class="backBar"><button class="miniBtn" data-back="home">← 返回</button><span class="backTitle">🍚 御膳房</span></div>
     <div class="seg kSeg" id="kSeg">
       <button class="segBtn meat active" data-ktab="menu">菜单</button>
       <button class="segBtn soup" data-ktab="draw">今天吃什么</button>
@@ -700,6 +730,7 @@ body.authing .tabbar, body.authing .header { display: none; }
 
   <!-- 礼尚往来（模块） -->
   <section id="view-gift" class="view" hidden>
+    <div class="backBar"><button class="miniBtn" data-back="home">← 返回</button><span class="backTitle">🧧 礼尚往来</span></div>
     <div class="seg kSeg" id="gSeg">
       <button class="segBtn meat active" data-gtab="list">流水</button>
       <button class="segBtn veg" data-gtab="person">人名账</button>
@@ -852,14 +883,6 @@ body.authing .tabbar, body.authing .header { display: none; }
   <button class="tabItem active" data-tab="home">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path class="f" d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>
     首页
-  </button>
-  <button class="tabItem" data-tab="kitchen">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M5 12h14a7 7 0 0 1-14 0Z"/><path d="M9 21h6"/><path d="M12 19v2"/><path d="M9 3c0 1.5 1 1.5 1 3"/><path d="M14 3c0 1.5 1 1.5 1 3"/></svg>
-    御膳房
-  </button>
-  <button class="tabItem" data-tab="gift">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect class="f" x="3" y="6" width="18" height="13" rx="2"/><path d="M3 7.5l9 6 9-6"/></svg>
-    礼尚往来
   </button>
   <button class="tabItem" data-tab="msg">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
@@ -2079,9 +2102,15 @@ function msgUnread(list) {
 }
 function updateMsgBadge(list) {
   var n = msgUnread(list);
+  var txt = n > 99 ? '99+' : String(n);
   var b = $('msgBadge');
-  if (n > 0) { b.hidden = false; b.textContent = n > 99 ? '99+' : String(n); }
+  if (n > 0) { b.hidden = false; b.textContent = txt; }
   else { b.hidden = true; }
+  var mb = $('modMsgBadge');
+  if (mb) {
+    if (n > 0) { mb.hidden = false; mb.textContent = txt; }
+    else { mb.hidden = true; }
+  }
 }
 function pollMessages() {
   if (document.visibilityState !== 'visible') return;
@@ -2304,8 +2333,9 @@ function updateDrawBtn() {
 /* ================= Tab 切换 ================= */
 function switchTab(tab) {
   state.tab = tab;
+  var activeTab = (tab === 'kitchen' || tab === 'gift') ? 'home' : tab; // 模块页归属门户高亮
   document.querySelectorAll('.tabItem').forEach(function (el) {
-    el.classList.toggle('active', el.getAttribute('data-tab') === tab);
+    el.classList.toggle('active', el.getAttribute('data-tab') === activeTab);
   });
   $('view-home').hidden = tab !== 'home';
   $('view-kitchen').hidden = tab !== 'kitchen';
@@ -2388,10 +2418,14 @@ $('kSeg').addEventListener('click', function (e) {
   var btn = e.target.closest('.segBtn');
   if (btn) switchKTab(btn.getAttribute('data-ktab'));
 });
-document.querySelector('.modGrid').addEventListener('click', function (e) {
+$('view-home').addEventListener('click', function (e) {
   var card = e.target.closest('.modCard');
   if (!card || card.disabled) return;
   switchTab(card.getAttribute('data-mod'));
+});
+document.addEventListener('click', function (e) {
+  var back = e.target.closest('[data-back]');
+  if (back) switchTab(back.getAttribute('data-back'));
 });
 document.querySelector('.steppers').addEventListener('click', function (e) {
   var btn = e.target.closest('.stepBtn');
