@@ -453,6 +453,14 @@ button { font-family: inherit; }
 .pNums b { font-size: 14px; }
 .pNums .out b { color: var(--c-veg); }
 .pNums .in b { color: var(--c-fav); }
+.gSum { display: flex; gap: 10px; margin: 0 0 6px; }
+.gSumItem { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
+.gSumLabel { font-size: 11px; color: var(--c-text-3); }
+.gSumVal { font-size: 20px; font-weight: 800; letter-spacing: .2px; }
+.gSumVal.out { color: var(--c-veg); }
+.gSumVal.in { color: var(--c-fav); }
+.gSumCnt { font-size: 11px; color: var(--c-text-3); }
+.gSumNet { font-size: 12px; color: var(--c-text-2); text-align: center; margin: 0 0 8px; }
 
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
@@ -688,6 +696,19 @@ button { font-family: inherit; }
     </div>
 
     <div id="gtab-list">
+      <div class="gSum">
+        <div class="card gSumItem">
+          <span class="gSumLabel">随礼支出 · 累计</span>
+          <b class="gSumVal out" id="gSumOut">¥0</b>
+          <span class="gSumCnt" id="gSumOutCnt">0 笔</span>
+        </div>
+        <div class="card gSumItem">
+          <span class="gSumLabel">收礼收入 · 累计</span>
+          <b class="gSumVal in" id="gSumIn">¥0</b>
+          <span class="gSumCnt" id="gSumInCnt">0 笔</span>
+        </div>
+      </div>
+      <p class="gSumNet" id="gSumNet"></p>
       <p class="kStats" id="giftStats"></p>
       <div class="seg" id="gDirSeg" style="margin-bottom:10px;">
         <button class="segBtn meat active" data-gdir="all">全部</button>
@@ -1426,9 +1447,9 @@ function writeGifts(mutate, logText) {
 function giftCanDel(g) {
   return !!session && g.by === session.id;
 }
-/* 编辑权限：本人记录 + 历史导入账（by=import）均可修改 */
+/* 编辑权限：设置昵称后可编辑任意一笔记录（含历史账与他人记录） */
 function giftCanEdit(g) {
-  return !!session && (g.by === session.id || g.by === 'import');
+  return !!session;
 }
 function resetGiftForm() {
   state.gEditId = '';
@@ -1453,11 +1474,18 @@ function renderGiftAll(list) {
 }
 function renderGiftStats(list) {
   var y = String(new Date().getFullYear());
-  var out = 0, inn = 0;
+  var out = 0, inn = 0, outAll = 0, inAll = 0, outN = 0, inN = 0;
   list.forEach(function (g) {
+    if (g.dir === 'out') { outAll += g.amount; outN++; } else { inAll += g.amount; inN++; }
     if ((g.date || '').slice(0, 4) !== y) return;
     if (g.dir === 'out') out += g.amount; else inn += g.amount;
   });
+  $('gSumOut').textContent = '¥' + outAll;
+  $('gSumOutCnt').textContent = outN + ' 笔';
+  $('gSumIn').textContent = '¥' + inAll;
+  $('gSumInCnt').textContent = inN + ' 笔';
+  var net = inAll - outAll;
+  $('gSumNet').textContent = '累计净额（收礼 − 随礼）' + (net >= 0 ? '+' : '') + net + ' 元';
   $('giftStats').textContent = y + ' 年 · 随礼支出 ¥' + out + ' · 收礼收入 ¥' + inn + ' · 净额 ¥' + (inn - out);
 }
 function renderGiftList(list) {
