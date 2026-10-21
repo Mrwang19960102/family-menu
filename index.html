@@ -430,9 +430,17 @@ button { font-family: inherit; }
 .pRecAct { display: flex; align-items: center; gap: 6px; flex: none; }
 .pToggle { border: none; background: none; color: var(--c-primary); font-size: 12px; padding: 2px 0 0; text-align: left; font-weight: 600; }
 .pAddBtn { border: none; background: var(--c-primary-light); color: var(--c-primary); border-radius: 999px; font-size: 12px; padding: 5px 12px; font-weight: 600; flex: none; }
-.gSum { display: flex; gap: 10px; margin: 0 0 6px; }
-.gSumItem { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
-.gSumLabel { font-size: 11px; color: var(--c-text-3); }
+.gSum { display: flex; justify-content: center; gap: 16px; margin: 4px 0 10px; }
+.gSumItem {
+  flex: 1; max-width: 190px; aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 12px 6px; text-align: center;
+  box-shadow: var(--shadow-card);
+}
+.gSumItem.out { background: var(--c-veg-light); }
+.gSumItem.in { background: #FFECEC; }
+.gSumLabel { font-size: 11px; color: var(--c-text-2); }
 .gSumVal { font-size: 20px; font-weight: 800; letter-spacing: .2px; }
 .gSumVal.out { color: var(--c-veg); }
 .gSumVal.in { color: var(--c-fav); }
@@ -659,12 +667,12 @@ button { font-family: inherit; }
   <section id="view-gift" class="view" hidden>
     <div class="backBar"><button class="miniBtn" data-back="home">← 返回</button><span class="backTitle">🧧 礼尚往来</span></div>
     <div class="gSum">
-      <div class="card gSumItem">
+      <div class="gSumItem out">
         <span class="gSumLabel">随礼支出 · 累计</span>
         <b class="gSumVal out" id="gSumOut">¥0</b>
         <span class="gSumCnt" id="gSumOutCnt">0 笔</span>
       </div>
-      <div class="card gSumItem">
+      <div class="gSumItem in">
         <span class="gSumLabel">收礼收入 · 累计</span>
         <b class="gSumVal in" id="gSumIn">¥0</b>
         <span class="gSumCnt" id="gSumInCnt">0 笔</span>
