@@ -56,7 +56,8 @@ button { font-family: inherit; }
 .statCard b { color: var(--c-primary); font-weight: 600; }
 
 /* ---------- 主内容 ---------- */
-.main { padding: 0 16px calc(88px + env(safe-area-inset-bottom)); }
+.sideMain { margin-left: 76px; }
+.main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
 .view { animation: fadeIn .12s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
@@ -499,41 +500,72 @@ button { font-family: inherit; }
 .steps li::marker { color: var(--c-primary); font-weight: 600; }
 .resultName { cursor: pointer; }
 
-/* ---------- TabBar ---------- */
-.tabbar {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  display: flex;
+/* ---------- 左侧导航栏（v2.6） ---------- */
+.sideNav {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 76px;
+  display: flex; flex-direction: column;
   background: var(--c-card);
-  border-top: 1px solid var(--c-border);
-  border-radius: 20px 20px 0 0;
-  box-shadow: var(--shadow-float);
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 10;
+  border-right: 1px solid var(--c-border);
+  padding: calc(10px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  z-index: 15;
 }
-.tabItem {
-  flex: 1; height: 56px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  border: none; background: none;
+.sideBrand { font-size: 24px; text-align: center; padding: 6px 0 10px; }
+.sideItem {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0; margin: 2px 8px;
+  border: none; background: none; border-radius: 12px;
   color: var(--c-text-3); font-size: 11px;
   position: relative;
 }
-.tabBadge {
-  position: absolute; top: 6px; left: calc(50% + 8px);
+.sideItem svg { width: 22px; height: 22px; }
+.sideItem svg .f { fill: none; }
+.sideItem.active { color: var(--c-primary); font-weight: 600; background: var(--c-primary-light); }
+.sideItem.active svg .f { fill: currentColor; }
+.sideBadge {
+  position: absolute; top: 4px; left: calc(50% + 6px);
   min-width: 16px; height: 16px; padding: 0 4px;
   border-radius: 999px;
   background: var(--c-fav); color: #fff;
   font-size: 10px; line-height: 16px; text-align: center;
 }
-.tabBadge[hidden] { display: none; }
+.sideBadge[hidden] { display: none; }
 .msgCard.fresh, .replyItem.fresh { box-shadow: inset 3px 0 0 var(--c-primary); }
-.tabItem svg { width: 22px; height: 22px; }
-.tabItem svg .f { fill: none; }
-.tabItem.active { color: var(--c-primary); font-weight: 600; }
-.tabItem.active svg .f { fill: currentColor; }
+@media (min-width: 768px) {
+  .sideNav { width: 96px; }
+  .sideMain { margin-left: 96px; }
+  .sideItem { font-size: 12px; padding: 11px 0; }
+}
 </style>
 </head>
 <body>
 
+<nav class="sideNav" id="sideNav" aria-label="模块导航">
+  <div class="sideBrand">🏠</div>
+  <button class="sideItem active" data-tab="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path class="f" d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>
+    首页
+  </button>
+  <button class="sideItem" data-tab="kitchen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 12h16a8 8 0 0 1-16 0Z"/><path d="M9 8c0-1.4 1-1.8 1-3M13 8c0-1.4 1-1.8 1-3"/></svg>
+    御膳房
+  </button>
+  <button class="sideItem" data-tab="gift">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect class="f" x="5" y="4" width="14" height="16" rx="2"/><path d="M5 9.5h14M12 4v5.5"/><circle cx="12" cy="14.5" r="2.2"/></svg>
+    礼尚往来
+  </button>
+  <button class="sideItem" data-tab="msg">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
+    留言板
+    <span class="sideBadge" id="msgBadge" hidden></span>
+  </button>
+  <button class="sideItem" data-tab="me">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path class="f" d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6Z"/></svg>
+    我的
+  </button>
+</nav>
+<div class="sideMain">
 <header class="header">
   <div class="headerTop">
     <div>
@@ -798,6 +830,7 @@ button { font-family: inherit; }
     </div>
   </section>
 </main>
+</div>
 
 <div class="overlay" id="overlay"></div>
 <div class="confirmMask" id="confirmMask" hidden>
@@ -832,23 +865,6 @@ button { font-family: inherit; }
   <button class="miniBtn sheetFav" id="sheetFav">♡ 收藏</button>
   <ol class="steps" id="sheetSteps"></ol>
 </section>
-
-<nav class="tabbar">
-  <button class="tabItem active" data-tab="home">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path class="f" d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>
-    首页
-  </button>
-  <button class="tabItem" data-tab="msg">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="f" d="M4 4h16v12h-9l-5 4v-4H4Z"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
-    留言板
-    <span class="tabBadge" id="msgBadge" hidden></span>
-  </button>
-  <button class="tabItem" data-tab="me">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path class="f" d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6Z"/></svg>
-    我的
-    <span class="tabBadge" id="meBadge" hidden></span>
-  </button>
-</nav>
 
 <script>
 /* ================= 菜单数据（293 道，支持一菜多分类） ================= */
@@ -2148,9 +2164,8 @@ function updateDrawBtn() {
 /* ================= Tab 切换 ================= */
 function switchTab(tab) {
   state.tab = tab;
-  var activeTab = (tab === 'kitchen' || tab === 'gift') ? 'home' : tab; // 模块页归属门户高亮
-  document.querySelectorAll('.tabItem').forEach(function (el) {
-    el.classList.toggle('active', el.getAttribute('data-tab') === activeTab);
+  document.querySelectorAll('.sideItem').forEach(function (el) {
+    el.classList.toggle('active', el.getAttribute('data-tab') === tab);
   });
   $('view-home').hidden = tab !== 'home';
   $('view-kitchen').hidden = tab !== 'kitchen';
@@ -2225,8 +2240,8 @@ document.querySelector('.main').addEventListener('click', function (e) {
   var favBtn = e.target.closest('[data-favdish]');
   if (favBtn) { toggleFav(favBtn.getAttribute('data-favdish')); return; }
 });
-document.querySelector('.tabbar').addEventListener('click', function (e) {
-  var item = e.target.closest('.tabItem');
+$('sideNav').addEventListener('click', function (e) {
+  var item = e.target.closest('.sideItem');
   if (item) switchTab(item.getAttribute('data-tab'));
 });
 $('kSeg').addEventListener('click', function (e) {
