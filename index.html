@@ -99,6 +99,7 @@ button { font-family: inherit; }
 .segBtn.active.meat { background: var(--c-primary); color: #fff; font-weight: 600; }
 .segBtn.active.veg { background: var(--c-veg); color: #fff; font-weight: 600; }
 .segBtn.active.soup { background: var(--c-soup); color: #fff; font-weight: 600; }
+.segBtn.active.fav { background: var(--c-fav); color: #fff; font-weight: 600; }
 .segBtn.active.fit { background: var(--c-fit); color: #fff; font-weight: 600; }
 
 /* 子类 tabs */
@@ -441,8 +442,8 @@ button { font-family: inherit; }
 .gMeta { font-size: 11px; color: var(--c-text-3); margin: 4px 0 0; }
 .gRight { text-align: right; flex: none; }
 .gAmt { font-size: 15px; font-weight: 700; }
-.gAmt.out { color: var(--c-fav); }
-.gAmt.in { color: var(--c-veg); }
+.gAmt.out { color: var(--c-veg); }
+.gAmt.in { color: var(--c-fav); }
 .pCard {
   padding: 12px 14px; margin-bottom: 10px;
   background: var(--c-card); border-radius: var(--r-card); box-shadow: var(--shadow-card);
@@ -450,8 +451,8 @@ button { font-family: inherit; }
 .pTop { display: flex; align-items: center; justify-content: space-between; }
 .pNums { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--c-text-2); }
 .pNums b { font-size: 14px; }
-.pNums .out b { color: var(--c-fav); }
-.pNums .in b { color: var(--c-veg); }
+.pNums .out b { color: var(--c-veg); }
+.pNums .in b { color: var(--c-fav); }
 
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
@@ -690,16 +691,16 @@ button { font-family: inherit; }
       <p class="kStats" id="giftStats"></p>
       <div class="seg" id="gDirSeg" style="margin-bottom:10px;">
         <button class="segBtn meat active" data-gdir="all">全部</button>
-        <button class="segBtn soup" data-gdir="out">支出 · 随礼</button>
-        <button class="segBtn veg" data-gdir="in">收入 · 收礼</button>
+        <button class="segBtn veg" data-gdir="out">支出 · 随礼</button>
+        <button class="segBtn fav" data-gdir="in">收入 · 收礼</button>
       </div>
       <p class="kStats" id="gPersonFilter" hidden></p>
       <button class="primaryBtn" id="gAddToggle">＋ 记一笔礼尚往来</button>
       <p class="hint" id="gGuestHint" hidden>登录后可记账；当前为只读浏览</p>
       <div class="card" id="gForm" hidden>
         <div class="seg" id="gFormDir" style="margin-bottom:10px;">
-          <button class="segBtn soup active" data-fdir="out">支出 · 随礼</button>
-          <button class="segBtn veg" data-fdir="in">收入 · 收礼</button>
+          <button class="segBtn veg active" data-fdir="out">支出 · 随礼</button>
+          <button class="segBtn fav" data-fdir="in">收入 · 收礼</button>
         </div>
         <div class="fGrid">
           <input type="date" class="authInput" id="gDate">
