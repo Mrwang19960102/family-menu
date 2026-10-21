@@ -408,17 +408,8 @@ button { font-family: inherit; }
 .fGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
 .fGrid .authInput, .fGrid .primaryBtn, .fGrid .ghostBtn { margin: 0; width: 100%; }
 #gForm .authInput { margin: 0 0 10px; }
-.gRow {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 10px 12px; margin-bottom: 8px;
-  background: var(--c-card); border-radius: 12px; box-shadow: var(--shadow-card);
-}
-.gLeft { min-width: 0; }
-.gTop { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .gName { font-size: 14px; font-weight: 600; color: var(--c-text); }
 .gTag { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--c-bg); color: var(--c-text-2); }
-.gMeta { font-size: 11px; color: var(--c-text-3); margin: 4px 0 0; }
-.gRight { text-align: right; flex: none; }
 .gAmt { font-size: 15px; font-weight: 700; }
 .gAmt.out { color: var(--c-veg); }
 .gAmt.in { color: var(--c-fav); }
@@ -426,11 +417,19 @@ button { font-family: inherit; }
   padding: 12px 14px; margin-bottom: 10px;
   background: var(--c-card); border-radius: var(--r-card); box-shadow: var(--shadow-card);
 }
-.pTop { display: flex; align-items: center; justify-content: space-between; }
+.pTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pTopL { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .pNums { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--c-text-2); }
 .pNums b { font-size: 14px; }
 .pNums .out b { color: var(--c-veg); }
 .pNums .in b { color: var(--c-fav); }
+.pRecs { margin-top: 10px; border-top: 1px dashed var(--c-border); padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.pRecRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pRecInfo { min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pRecMeta { font-size: 11px; color: var(--c-text-3); }
+.pRecAct { display: flex; align-items: center; gap: 6px; flex: none; }
+.pToggle { border: none; background: none; color: var(--c-primary); font-size: 12px; padding: 2px 0 0; text-align: left; font-weight: 600; }
+.pAddBtn { border: none; background: var(--c-primary-light); color: var(--c-primary); border-radius: 999px; font-size: 12px; padding: 5px 12px; font-weight: 600; flex: none; }
 .gSum { display: flex; gap: 10px; margin: 0 0 6px; }
 .gSumItem { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
 .gSumLabel { font-size: 11px; color: var(--c-text-3); }
@@ -659,63 +658,45 @@ button { font-family: inherit; }
   <!-- 礼尚往来（模块） -->
   <section id="view-gift" class="view" hidden>
     <div class="backBar"><button class="miniBtn" data-back="home">← 返回</button><span class="backTitle">🧧 礼尚往来</span></div>
-    <div class="seg kSeg" id="gSeg">
-      <button class="segBtn meat active" data-gtab="list">流水</button>
-      <button class="segBtn veg" data-gtab="person">人名账</button>
-    </div>
-
-    <div id="gtab-list">
-      <div class="gSum">
-        <div class="card gSumItem">
-          <span class="gSumLabel">随礼支出 · 累计</span>
-          <b class="gSumVal out" id="gSumOut">¥0</b>
-          <span class="gSumCnt" id="gSumOutCnt">0 笔</span>
-        </div>
-        <div class="card gSumItem">
-          <span class="gSumLabel">收礼收入 · 累计</span>
-          <b class="gSumVal in" id="gSumIn">¥0</b>
-          <span class="gSumCnt" id="gSumInCnt">0 笔</span>
-        </div>
+    <div class="gSum">
+      <div class="card gSumItem">
+        <span class="gSumLabel">随礼支出 · 累计</span>
+        <b class="gSumVal out" id="gSumOut">¥0</b>
+        <span class="gSumCnt" id="gSumOutCnt">0 笔</span>
       </div>
-      <p class="gSumNet" id="gSumNet"></p>
-      <p class="kStats" id="giftStats"></p>
-      <div class="seg" id="gDirSeg" style="margin-bottom:10px;">
-        <button class="segBtn meat active" data-gdir="all">全部</button>
-        <button class="segBtn veg" data-gdir="out">支出 · 随礼</button>
-        <button class="segBtn fav" data-gdir="in">收入 · 收礼</button>
+      <div class="card gSumItem">
+        <span class="gSumLabel">收礼收入 · 累计</span>
+        <b class="gSumVal in" id="gSumIn">¥0</b>
+        <span class="gSumCnt" id="gSumInCnt">0 笔</span>
       </div>
-      <p class="kStats" id="gPersonFilter" hidden></p>
-      <button class="primaryBtn" id="gAddToggle">＋ 记一笔礼尚往来</button>
-      <p class="hint" id="gGuestHint" hidden>登录后可记账；当前为只读浏览</p>
-      <div class="card" id="gForm" hidden>
-        <div class="seg" id="gFormDir" style="margin-bottom:10px;">
-          <button class="segBtn veg active" data-fdir="out">支出 · 随礼</button>
-          <button class="segBtn fav" data-fdir="in">收入 · 收礼</button>
-        </div>
-        <div class="fGrid">
-          <input type="date" class="authInput" id="gDate">
-          <input type="number" class="authInput" id="gAmount" placeholder="金额（元）" min="0" step="1">
-        </div>
-        <input type="text" class="authInput" id="gName" placeholder="对方姓名（如：表哥 王强）" list="giftNames" maxlength="20">
-        <datalist id="giftNames"></datalist>
-        <div class="fGrid">
-          <select class="authInput" id="gRel"></select>
-          <select class="authInput" id="gEvent"></select>
-        </div>
-        <input type="text" class="authInput" id="gNote" placeholder="备注（可选）" maxlength="40">
-        <div class="fGrid">
-          <button class="primaryBtn" id="gSave">保存</button>
-          <button class="ghostBtn" id="gCancel">取消</button>
-        </div>
-        <p class="msgErr" id="gErr" hidden></p>
+    </div>
+    <p class="gSumNet" id="gSumNet"></p>
+    <p class="kStats" id="giftStats"></p>
+    <button class="primaryBtn" id="gAddToggle">＋ 记一笔礼尚往来</button>
+    <div class="card" id="gForm" hidden>
+      <div class="seg" id="gFormDir" style="margin-bottom:10px;">
+        <button class="segBtn veg active" data-fdir="out">支出 · 随礼</button>
+        <button class="segBtn fav" data-fdir="in">收入 · 收礼</button>
       </div>
-      <div id="giftList"></div>
+      <div class="fGrid">
+        <input type="date" class="authInput" id="gDate">
+        <input type="number" class="authInput" id="gAmount" placeholder="金额（元）" min="0" step="1">
+      </div>
+      <input type="text" class="authInput" id="gName" placeholder="对方姓名（如：表哥 王强）" list="giftNames" maxlength="20">
+      <datalist id="giftNames"></datalist>
+      <div class="fGrid">
+        <select class="authInput" id="gRel"></select>
+        <select class="authInput" id="gEvent"></select>
+      </div>
+      <input type="text" class="authInput" id="gNote" placeholder="备注（可选）" maxlength="40">
+      <div class="fGrid">
+        <button class="primaryBtn" id="gSave">保存</button>
+        <button class="ghostBtn" id="gCancel">取消</button>
+      </div>
+      <p class="msgErr" id="gErr" hidden></p>
     </div>
-
-    <div id="gtab-person" hidden>
-      <p class="kStats">点人名可看与其的全部往来流水</p>
-      <div id="personList"></div>
-    </div>
+    <p class="kStats" style="margin-top:14px;">按人名聚合 · 点「共 n 笔 · 展开」看全部往来</p>
+    <div id="personList"></div>
   </section>
 
   <!-- 留言板 -->
@@ -1193,7 +1174,7 @@ var QUOTES = [
 ];
 
 /* ================= 状态 ================= */
-var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', gtab: 'list', gdir: 'all', gperson: '', fdir: 'out', gEditId: '' };
+var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', fdir: 'out', gEditId: '', gOpen: {} };
 var pickCount = { meat: 1, veg: 1, soup: 0 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -1472,8 +1453,7 @@ function renderGiftView() {
 }
 function renderGiftAll(list) {
   renderGiftStats(list);
-  renderGiftList(list);
-  renderGiftPersons(list);
+  renderGiftCards(list);
   var names = {};
   list.forEach(function (g) { names[g.name] = 1; });
   $('giftNames').innerHTML = Object.keys(names).map(function (n) { return '<option value="' + escMsg(n) + '">'; }).join('');
@@ -1494,99 +1474,86 @@ function renderGiftStats(list) {
   $('gSumNet').textContent = '累计净额（收礼 − 随礼）' + (net >= 0 ? '+' : '') + net + ' 元';
   $('giftStats').textContent = y + ' 年 · 随礼支出 ¥' + out + ' · 收礼收入 ¥' + inn + ' · 净额 ¥' + (inn - out);
 }
-function renderGiftList(list) {
-  var pf = $('gPersonFilter');
-  if (state.gperson) {
-    pf.hidden = false;
-    pf.innerHTML = '筛选：' + escMsg(state.gperson) + ' <button class="miniBtn" id="gPersonClear">清除</button>';
-  } else pf.hidden = true;
-  var rows = list.filter(function (g) {
-    if (state.gdir !== 'all' && g.dir !== state.gdir) return false;
-    if (state.gperson && g.name !== state.gperson) return false;
-    return true;
-  });
-  if (!rows.length) {
-    $('giftList').innerHTML = '<div class="empty"><div class="emptyEmoji">🧧</div><p>暂无往来记录</p></div>';
-    return;
-  }
-  $('giftList').innerHTML = rows.map(function (g) {
-    var edit = giftCanEdit(g) ? '<button class="miniBtn" data-gedit="' + g.id + '" aria-label="编辑">🖊️</button>' : '';
-    var del = giftCanDel(g) ? '<button class="miniBtn msgDel" data-gdel="' + g.id + '">删除</button>' : '';
-    return '<div class="gRow"><div class="gLeft"><div class="gTop"><span class="gName">' + escMsg(g.name) + '</span>'
-      + '<span class="gTag">' + escMsg(g.event) + '</span><span class="gTag">' + escMsg(g.rel) + '</span></div>'
-      + '<p class="gMeta">' + [g.date, g.note, g.byNick].filter(Boolean).map(escMsg).join(' · ') + '</p></div>'
-      + '<div class="gRight"><span class="gAmt ' + g.dir + '">' + (g.dir === 'out' ? '−¥' : '+¥') + g.amount + '</span> ' + edit + del + '</div></div>';
-  }).join('');
+function recRowHTML(g) {
+  var edit = giftCanEdit(g) ? '<button class="miniBtn" data-gedit="' + g.id + '" aria-label="编辑">🖊️</button>' : '';
+  var del = giftCanDel(g) ? '<button class="miniBtn msgDel" data-gdel="' + g.id + '">删除</button>' : '';
+  return '<div class="pRecRow"><div class="pRecInfo"><span class="gTag">' + escMsg(g.event) + '</span>'
+    + '<span class="pRecMeta">' + [g.date, g.note].filter(Boolean).map(escMsg).join(' · ') + '</span></div>'
+    + '<div class="pRecAct"><span class="gAmt ' + g.dir + '">' + (g.dir === 'out' ? '−¥' : '+¥') + g.amount + '</span>' + edit + del + '</div></div>';
 }
-function renderGiftPersons(list) {
+/* 人名卡（v2.9：流水与人名账合并，以人名为主体） */
+function renderGiftCards(list) {
   var map = {};
   list.forEach(function (g) {
-    var p = map[g.name] || (map[g.name] = { name: g.name, rel: g.rel, out: 0, inn: 0, n: 0, last: '' });
+    var p = map[g.name] || (map[g.name] = { name: g.name, rel: g.rel, out: 0, inn: 0, recs: [] });
     if (g.dir === 'out') p.out += g.amount; else p.inn += g.amount;
-    p.n++;
-    if (g.date > p.last) p.last = g.date;
+    p.recs.push(g);
   });
   var arr = Object.keys(map).map(function (k) { return map[k]; });
   arr.sort(function (a, b) { return (b.out + b.inn) - (a.out + a.inn); });
   if (!arr.length) {
-    $('personList').innerHTML = '<div class="empty"><div class="emptyEmoji">🧧</div><p>暂无人名账</p></div>';
+    $('personList').innerHTML = '<div class="empty"><div class="emptyEmoji">🧧</div><p>暂无往来记录</p></div>';
     return;
   }
   $('personList').innerHTML = arr.map(function (p) {
+    p.recs.sort(function (a, b) {
+      var da = a.date || '', db = b.date || '';
+      if (da !== db) return da < db ? 1 : -1;
+      return (b.ts || '') > (a.ts || '') ? 1 : -1;
+    });
     var diff = p.inn - p.out;
-    return '<div class="pCard" data-person="' + escMsg(p.name) + '"><div class="pTop"><span class="gName">' + escMsg(p.name)
+    var open = !!state.gOpen[p.name];
+    var shown = open ? p.recs : p.recs.slice(0, 1);
+    var toggle = p.recs.length > 1
+      ? '<button class="pToggle" data-ptoggle="' + escMsg(p.name) + '">' + (open ? '收起 ↑' : '共 ' + p.recs.length + ' 笔 · 展开 ↓') + '</button>'
+      : '';
+    return '<div class="pCard"><div class="pTop"><div class="pTopL"><span class="gName">' + escMsg(p.name)
       + '</span><span class="gTag">' + escMsg(p.rel) + '</span></div>'
+      + '<button class="pAddBtn" data-padd="' + escMsg(p.name) + '" data-prel="' + escMsg(p.rel) + '">＋ 记一笔</button></div>'
       + '<div class="pNums"><span class="out">我方随礼 <b>¥' + p.out + '</b></span><span class="in">对方随礼 <b>¥' + p.inn + '</b></span>'
-      + '<span>差额 <b>' + (diff >= 0 ? '+' : '') + diff + '</b></span><span>' + p.n + ' 笔' + (p.last ? ' · 近 ' + p.last : '') + '</span></div></div>';
+      + '<span>差额 <b>' + (diff >= 0 ? '+' : '') + diff + '</b></span></div>'
+      + '<div class="pRecs">' + shown.map(recRowHTML).join('') + toggle + '</div></div>';
   }).join('');
 }
-function switchGTab(t) {
-  state.gtab = t;
-  document.querySelectorAll('#gSeg .segBtn').forEach(function (el) {
-    el.classList.toggle('active', el.getAttribute('data-gtab') === t);
+function openGiftFormWith(name, rel) {
+  resetGiftForm();
+  $('gDate').value = new Date().toISOString().slice(0, 10);
+  $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  $('gName').value = name || '';
+  if (rel) $('gRel').value = rel;
+  state.fdir = 'out';
+  document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el.getAttribute('data-fdir') === 'out');
   });
-  $('gtab-list').hidden = t !== 'list';
-  $('gtab-person').hidden = t !== 'person';
+  $('gForm').hidden = false;
+  $('gForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
-$('gSeg').addEventListener('click', function (e) {
-  var b = e.target.closest('.segBtn');
-  if (b) switchGTab(b.getAttribute('data-gtab'));
-});
-$('gDirSeg').addEventListener('click', function (e) {
-  var b = e.target.closest('.segBtn');
-  if (!b) return;
-  state.gdir = b.getAttribute('data-gdir');
-  document.querySelectorAll('#gDirSeg .segBtn').forEach(function (el) {
-    el.classList.toggle('active', el === b);
-  });
-  loadGifts(false).then(renderGiftList);
-});
-$('gPersonFilter').addEventListener('click', function (e) {
-  if (e.target.id === 'gPersonClear') {
-    state.gperson = '';
-    loadGifts(false).then(renderGiftList);
-  }
+$('gAddToggle').addEventListener('click', function () {
+  if (!$('gForm').hidden) { $('gForm').hidden = true; resetGiftForm(); return; }
+  openGiftFormWith('', '');
 });
 $('personList').addEventListener('click', function (e) {
-  var card = e.target.closest('[data-person]');
-  if (!card) return;
-  state.gperson = card.getAttribute('data-person');
-  switchGTab('list');
-  loadGifts(false).then(renderGiftList);
-});
-$('gAddToggle').addEventListener('click', function () {
-  var f = $('gForm');
-  f.hidden = !f.hidden;
-  if (!f.hidden) {
-    resetGiftForm();
-    $('gDate').value = new Date().toISOString().slice(0, 10);
-    $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
-    $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
-    state.fdir = 'out';
-    document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
-      el.classList.toggle('active', el.getAttribute('data-fdir') === 'out');
+  var eb = e.target.closest('[data-gedit]');
+  if (eb) { openGiftEdit(eb.getAttribute('data-gedit')); return; }
+  var db = e.target.closest('[data-gdel]');
+  if (db) {
+    var gid = db.getAttribute('data-gdel');
+    askConfirm('确认删除这笔往来记录？', '删除', function () {
+      writeGifts(function (list) { return list.filter(function (g) { return g.id !== gid; }); }, '[Gift] 删除记录: ' + gid)
+        .then(function (nl) { renderGiftAll(nl); showToast('记录已删除'); });
     });
+    return;
   }
+  var tb = e.target.closest('[data-ptoggle]');
+  if (tb) {
+    var nm = tb.getAttribute('data-ptoggle');
+    state.gOpen[nm] = !state.gOpen[nm];
+    loadGifts(false).then(renderGiftCards);
+    return;
+  }
+  var ab = e.target.closest('[data-padd]');
+  if (ab) openGiftFormWith(ab.getAttribute('data-padd'), ab.getAttribute('data-prel'));
 });
 $('gCancel').addEventListener('click', function () { $('gForm').hidden = true; resetGiftForm(); });
 $('gFormDir').addEventListener('click', function (e) {
@@ -1677,21 +1644,6 @@ $('gEditSave').addEventListener('click', function () {
     showToast('保存失败，请稍后重试', true);
     console.error('[Gift] 编辑写入失败', e);
   }).then(function () { $('gEditSave').disabled = false; });
-});
-$('giftList').addEventListener('click', function (e) {
-  var eb = e.target.closest('[data-gedit]');
-  if (eb) {
-    openGiftEdit(eb.getAttribute('data-gedit'));
-    return;
-  }
-  var btn = e.target.closest('[data-gdel]');
-  if (!btn) return;
-  var gid = btn.getAttribute('data-gdel');
-  askConfirm('确认删除这笔往来记录？', '删除', function () {
-    writeGifts(function (list) {
-      return list.filter(function (g) { return g.id !== gid; });
-    }, '[Gift] 删除记录: ' + gid).then(function (nl) { renderGiftAll(nl); showToast('记录已删除'); });
-  });
 });
 
 /* ================= 留言板（GitHub 云同步：仓库 messages.json 即数据库） ================= */
