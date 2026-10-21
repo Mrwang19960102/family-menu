@@ -439,6 +439,10 @@ button { font-family: inherit; }
 .gSumVal.in { color: var(--c-fav); }
 .gSumCnt { font-size: 11px; color: var(--c-text-3); }
 .gSumNet { font-size: 12px; color: var(--c-text-2); text-align: center; margin: 0 0 8px; }
+.gEditBox { width: 100%; max-width: 340px; max-height: 82vh; overflow-y: auto; }
+.gEditBox .authInput { width: 100%; margin: 0 0 10px; }
+.gEditBox .fGrid .authInput { margin: 0; }
+.gEditHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 
 /* ---------- 做法详情弹层 ---------- */
 .overlay {
@@ -787,6 +791,33 @@ button { font-family: inherit; }
   </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div class="confirmMask" id="gEditMask" hidden>
+  <div class="confirmBox gEditBox">
+    <div class="gEditHead">
+      <span class="cardTitle">🖊️ 编辑往来记录</span>
+      <button class="sheetClose" id="gEditClose" aria-label="关闭">×</button>
+    </div>
+    <div class="seg" id="gEditDir" style="margin-bottom:10px;">
+      <button class="segBtn veg" data-edir="out">支出 · 随礼</button>
+      <button class="segBtn fav" data-edir="in">收入 · 收礼</button>
+    </div>
+    <div class="fGrid">
+      <input type="date" class="authInput" id="gEditDate">
+      <input type="number" class="authInput" id="gEditAmount" placeholder="金额（元）" min="0" step="1">
+    </div>
+    <input type="text" class="authInput" id="gEditName" placeholder="对方姓名" list="giftNames" maxlength="20">
+    <div class="fGrid">
+      <select class="authInput" id="gEditRel"></select>
+      <select class="authInput" id="gEditEvent"></select>
+    </div>
+    <input type="text" class="authInput" id="gEditNote" placeholder="备注（可选）" maxlength="40">
+    <div class="fGrid">
+      <button class="primaryBtn" id="gEditSave">保存修改</button>
+      <button class="ghostBtn" id="gEditCancel">取消</button>
+    </div>
+    <p class="msgErr" id="gEditErr" hidden></p>
+  </div>
+</div>
 <section class="sheet" id="sheet" aria-label="做法详情">
   <div class="sheetHead">
     <div>
@@ -1408,6 +1439,32 @@ function resetGiftForm() {
   $('gNote').value = '';
   $('gErr').hidden = true;
 }
+/* ================= 编辑弹窗（v2.8：🖊️ 按钮唤起） ================= */
+var gEditDirNow = 'out';
+function openGiftEdit(id) {
+  var rec0 = null;
+  (giftCache || []).forEach(function (g) { if (g.id === id) rec0 = g; });
+  if (!rec0 || !giftCanEdit(rec0)) return;
+  state.gEditId = id;
+  $('gEditRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  $('gEditEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  $('gEditDate').value = rec0.date || '';
+  $('gEditAmount').value = rec0.amount;
+  $('gEditName').value = rec0.name;
+  $('gEditRel').value = rec0.rel;
+  $('gEditEvent').value = rec0.event;
+  $('gEditNote').value = rec0.note || '';
+  gEditDirNow = rec0.dir;
+  document.querySelectorAll('#gEditDir .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el.getAttribute('data-edir') === gEditDirNow);
+  });
+  $('gEditErr').hidden = true;
+  $('gEditMask').hidden = false;
+}
+function closeGiftEdit() {
+  $('gEditMask').hidden = true;
+  state.gEditId = '';
+}
 function renderGiftView() {
   loadGifts(false).then(function (list) {
     renderGiftAll(list);
@@ -1453,7 +1510,7 @@ function renderGiftList(list) {
     return;
   }
   $('giftList').innerHTML = rows.map(function (g) {
-    var edit = giftCanEdit(g) ? '<button class="miniBtn" data-gedit="' + g.id + '">编辑</button>' : '';
+    var edit = giftCanEdit(g) ? '<button class="miniBtn" data-gedit="' + g.id + '" aria-label="编辑">🖊️</button>' : '';
     var del = giftCanDel(g) ? '<button class="miniBtn msgDel" data-gdel="' + g.id + '">删除</button>' : '';
     return '<div class="gRow"><div class="gLeft"><div class="gTop"><span class="gName">' + escMsg(g.name) + '</span>'
       + '<span class="gTag">' + escMsg(g.event) + '</span><span class="gTag">' + escMsg(g.rel) + '</span></div>'
@@ -1543,78 +1600,88 @@ $('gFormDir').addEventListener('click', function (e) {
 $('gSave').addEventListener('click', function () {
   var err = $('gErr');
   err.hidden = true;
-  var editId = state.gEditId;
   var date = $('gDate').value;
   var amount = parseFloat($('gAmount').value);
   var name = $('gName').value.trim();
-  if (!name || !(amount > 0) || (!editId && !date)) {
+  if (!date || !name || !(amount > 0)) {
     err.hidden = false;
-    err.textContent = editId ? '请填写对方姓名和大于 0 的金额（日期可留空）' : '请填写日期、对方姓名和大于 0 的金额';
+    err.textContent = '请填写日期、对方姓名和大于 0 的金额';
     return;
   }
-  var rel = $('gRel').value, event = $('gEvent').value, note = $('gNote').value.trim();
-  var logText, mutate;
-  if (editId) {
-    logText = '[Gift] 修改记录: ' + editId + ' -> ' + name + ' ' + state.fdir + ' ' + amount;
-    mutate = function (list) {
-      return list.map(function (g) {
-        if (g.id !== editId) return g;
-        g.date = date; g.name = name; g.rel = rel; g.event = event;
-        g.dir = state.fdir; g.amount = amount; g.note = note;
-        g.editedBy = displayName(); g.editedAt = new Date().toISOString();
-        return g;
-      });
-    };
-  } else {
-    var rec = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      date: date, name: name, rel: rel, event: event,
-      dir: state.fdir, amount: amount, note: note,
-      by: session.id, byNick: displayName(), ts: new Date().toISOString()
-    };
-    logText = '[Gift] 记账: ' + name + ' ' + rec.dir + ' ' + amount;
-    mutate = function (list) { list.unshift(rec); return list; };
-  }
+  var rec = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    date: date, name: name, rel: $('gRel').value, event: $('gEvent').value,
+    dir: state.fdir, amount: amount, note: $('gNote').value.trim(),
+    by: session.id, byNick: displayName(), ts: new Date().toISOString()
+  };
   $('gSave').disabled = true;
-  $('gSave').textContent = editId ? '保存修改中…' : '保存中…';
-  writeGifts(mutate, logText).then(function (nl) {
+  $('gSave').textContent = '保存中…';
+  writeGifts(function (list) {
+    list.unshift(rec);
+    return list;
+  }, '[Gift] 记账: ' + name + ' ' + rec.dir + ' ' + amount).then(function (nl) {
     $('gForm').hidden = true;
     resetGiftForm();
     renderGiftAll(nl);
-    showToast(editId ? '修改已保存' : '已记一笔');
+    showToast('已记一笔');
   }).catch(function (e) {
     err.hidden = false;
     err.textContent = '保存失败，请稍后重试';
     showToast('保存失败，请稍后重试', true);
     console.error('[Gift] 写入失败', e);
     $('gSave').disabled = false;
-    $('gSave').textContent = editId ? '保存修改' : '保存';
+    $('gSave').textContent = '保存';
   });
+});
+$('gEditDir').addEventListener('click', function (e) {
+  var b = e.target.closest('.segBtn');
+  if (!b) return;
+  gEditDirNow = b.getAttribute('data-edir');
+  document.querySelectorAll('#gEditDir .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el === b);
+  });
+});
+$('gEditClose').addEventListener('click', closeGiftEdit);
+$('gEditCancel').addEventListener('click', closeGiftEdit);
+$('gEditMask').addEventListener('click', function (e) { if (e.target === $('gEditMask')) closeGiftEdit(); });
+$('gEditSave').addEventListener('click', function () {
+  var err = $('gEditErr');
+  err.hidden = true;
+  var editId = state.gEditId;
+  if (!editId) { closeGiftEdit(); return; }
+  var date = $('gEditDate').value;
+  var amount = parseFloat($('gEditAmount').value);
+  var name = $('gEditName').value.trim();
+  if (!name || !(amount > 0)) {
+    err.hidden = false;
+    err.textContent = '请填写对方姓名和大于 0 的金额（日期可留空）';
+    return;
+  }
+  var rel = $('gEditRel').value, event = $('gEditEvent').value, note = $('gEditNote').value.trim();
+  $('gEditSave').disabled = true;
+  writeGifts(function (list) {
+    return list.map(function (g) {
+      if (g.id !== editId) return g;
+      g.date = date; g.name = name; g.rel = rel; g.event = event;
+      g.dir = gEditDirNow; g.amount = amount; g.note = note;
+      g.editedBy = displayName(); g.editedAt = new Date().toISOString();
+      return g;
+    });
+  }, '[Gift] 修改记录: ' + editId + ' -> ' + name + ' ' + gEditDirNow + ' ' + amount).then(function (nl) {
+    closeGiftEdit();
+    renderGiftAll(nl);
+    showToast('修改已保存');
+  }).catch(function (e) {
+    err.hidden = false;
+    err.textContent = '保存失败，请稍后重试';
+    showToast('保存失败，请稍后重试', true);
+    console.error('[Gift] 编辑写入失败', e);
+  }).then(function () { $('gEditSave').disabled = false; });
 });
 $('giftList').addEventListener('click', function (e) {
   var eb = e.target.closest('[data-gedit]');
   if (eb) {
-    var eid = eb.getAttribute('data-gedit');
-    var rec0 = null;
-    (giftCache || []).forEach(function (g) { if (g.id === eid) rec0 = g; });
-    if (!rec0 || !giftCanEdit(rec0)) return;
-    state.gEditId = eid;
-    $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
-    $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
-    $('gDate').value = rec0.date || '';
-    $('gAmount').value = rec0.amount;
-    $('gName').value = rec0.name;
-    $('gRel').value = rec0.rel;
-    $('gEvent').value = rec0.event;
-    $('gNote').value = rec0.note || '';
-    state.fdir = rec0.dir;
-    document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
-      el.classList.toggle('active', el.getAttribute('data-fdir') === rec0.dir);
-    });
-    $('gSave').textContent = '保存修改';
-    $('gErr').hidden = true;
-    $('gForm').hidden = false;
-    $('gForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    openGiftEdit(eb.getAttribute('data-gedit'));
     return;
   }
   var btn = e.target.closest('[data-gdel]');
