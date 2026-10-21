@@ -672,7 +672,10 @@ button { font-family: inherit; }
     </div>
     <p class="gSumNet" id="gSumNet"></p>
     <p class="kStats" id="giftStats"></p>
-    <button class="primaryBtn" id="gAddToggle">＋ 记一笔礼尚往来</button>
+    <div class="fGrid" style="margin-bottom:10px;">
+      <button class="primaryBtn" id="gAddToggle">＋ 记一笔</button>
+      <button class="ghostBtn" id="gAddPerson">＋ 增加人物</button>
+    </div>
     <div class="card" id="gForm" hidden>
       <div class="seg" id="gFormDir" style="margin-bottom:10px;">
         <button class="segBtn veg active" data-fdir="out">支出 · 随礼</button>
@@ -797,6 +800,21 @@ button { font-family: inherit; }
       <button class="ghostBtn" id="gEditCancel">取消</button>
     </div>
     <p class="msgErr" id="gEditErr" hidden></p>
+  </div>
+</div>
+<div class="confirmMask" id="gPersonMask" hidden>
+  <div class="confirmBox gEditBox">
+    <div class="gEditHead">
+      <span class="cardTitle">👤 增加人物</span>
+      <button class="sheetClose" id="gPersonClose" aria-label="关闭">×</button>
+    </div>
+    <input type="text" class="authInput" id="gPersonName" placeholder="姓名（如：表哥 王强）" maxlength="20">
+    <select class="authInput" id="gPersonRel"></select>
+    <div class="fGrid">
+      <button class="primaryBtn" id="gPersonSave">保存</button>
+      <button class="ghostBtn" id="gPersonCancel">取消</button>
+    </div>
+    <p class="msgErr" id="gPersonErr" hidden></p>
   </div>
 </div>
 <section class="sheet" id="sheet" aria-label="做法详情">
@@ -1384,10 +1402,12 @@ var GIFTS_FILE = 'gifts.json';
 var GIFT_REL = ['亲戚', '朋友', '同事', '同学', '邻居', '其他'];
 var GIFT_EVT = ['婚礼', '生日', '满月百岁', '乔迁', '白事', '升学', '年节问候', '其他'];
 var giftCache = null;
+var personCache = []; // 人物名录（v2.10：先加人物，再在人物下记份子钱）
 function loadGifts(force) {
   if (giftCache && !force) return Promise.resolve(giftCache);
   return ghGetJson(GIFTS_FILE).then(function (d) {
     giftCache = (d && d.gifts) || [];
+    personCache = (d && d.persons) || [];
     return giftCache;
   }).catch(function (e) {
     console.error('[Gift] 读取失败（视为空）', e);
@@ -1398,12 +1418,28 @@ function loadGifts(force) {
 function writeGifts(mutate, logText) {
   return loadGifts(true).then(function (list) {
     var nl = mutate(list.slice());
-    return ghPutJson(GIFTS_FILE, { gifts: nl }).then(function () {
+    return ghPutJson(GIFTS_FILE, { gifts: nl, persons: personCache }).then(function () {
       giftCache = nl;
       console.log(logText);
       return nl;
     });
   });
+}
+function writePersons(mutate, logText) {
+  return loadGifts(true).then(function () {
+    var np = mutate(personCache.slice());
+    return ghPutJson(GIFTS_FILE, { gifts: giftCache, persons: np }).then(function () {
+      personCache = np;
+      console.log(logText);
+      return np;
+    });
+  });
+}
+function ensurePerson(name, rel) {
+  var hit = null;
+  personCache.forEach(function (p) { if (p.name === name) hit = p; });
+  if (hit) { if (rel) hit.rel = rel; return; }
+  personCache.push({ id: 'p' + Date.now().toString(36), name: name, rel: rel || '其他', created: new Date().toISOString() });
 }
 function giftCanDel(g) {
   return !!session && g.by === session.id;
@@ -1484,6 +1520,9 @@ function recRowHTML(g) {
 /* 人名卡（v2.9：流水与人名账合并，以人名为主体） */
 function renderGiftCards(list) {
   var map = {};
+  (personCache || []).forEach(function (pn) {
+    map[pn.name] = { name: pn.name, rel: pn.rel, out: 0, inn: 0, recs: [] };
+  });
   list.forEach(function (g) {
     var p = map[g.name] || (map[g.name] = { name: g.name, rel: g.rel, out: 0, inn: 0, recs: [] });
     if (g.dir === 'out') p.out += g.amount; else p.inn += g.amount;
@@ -1512,7 +1551,7 @@ function renderGiftCards(list) {
       + '<button class="pAddBtn" data-padd="' + escMsg(p.name) + '" data-prel="' + escMsg(p.rel) + '">＋ 记一笔</button></div>'
       + '<div class="pNums"><span class="out">我方随礼 <b>¥' + p.out + '</b></span><span class="in">对方随礼 <b>¥' + p.inn + '</b></span>'
       + '<span>差额 <b>' + (diff >= 0 ? '+' : '') + diff + '</b></span></div>'
-      + '<div class="pRecs">' + shown.map(recRowHTML).join('') + toggle + '</div></div>';
+      + '<div class="pRecs">' + (shown.length ? shown.map(recRowHTML).join('') : '<p class="pRecMeta">暂无往来记录，点右上「＋ 记一笔」添加份子钱</p>') + toggle + '</div></div>';
   }).join('');
 }
 function openGiftFormWith(name, rel) {
@@ -1521,7 +1560,9 @@ function openGiftFormWith(name, rel) {
   $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
   $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
   $('gName').value = name || '';
-  if (rel) $('gRel').value = rel;
+  var pr = null;
+  personCache.forEach(function (p) { if (p.name === name) pr = p; });
+  $('gRel').value = (pr && pr.rel) || rel || '其他';
   state.fdir = 'out';
   document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
     el.classList.toggle('active', el.getAttribute('data-fdir') === 'out');
@@ -1532,6 +1573,39 @@ function openGiftFormWith(name, rel) {
 $('gAddToggle').addEventListener('click', function () {
   if (!$('gForm').hidden) { $('gForm').hidden = true; resetGiftForm(); return; }
   openGiftFormWith('', '');
+});
+$('gAddPerson').addEventListener('click', function () {
+  $('gPersonName').value = '';
+  $('gPersonRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  $('gPersonErr').hidden = true;
+  $('gPersonMask').hidden = false;
+  $('gPersonName').focus();
+});
+function closePersonModal() { $('gPersonMask').hidden = true; }
+$('gPersonClose').addEventListener('click', closePersonModal);
+$('gPersonCancel').addEventListener('click', closePersonModal);
+$('gPersonMask').addEventListener('click', function (e) { if (e.target === $('gPersonMask')) closePersonModal(); });
+$('gPersonSave').addEventListener('click', function () {
+  var err = $('gPersonErr');
+  err.hidden = true;
+  var name = $('gPersonName').value.trim();
+  if (!name) { err.hidden = false; err.textContent = '请填写姓名'; return; }
+  var dup = personCache.some(function (p) { return p.name === name; })
+    || (giftCache || []).some(function (g) { return g.name === name; });
+  if (dup) { err.hidden = false; err.textContent = '该人物已存在，直接点人名卡上的「＋ 记一笔」即可'; return; }
+  $('gPersonSave').disabled = true;
+  writePersons(function (ps) {
+    ps.push({ id: 'p' + Date.now().toString(36), name: name, rel: $('gPersonRel').value, created: new Date().toISOString() });
+    return ps;
+  }, '[Gift] 增加人物: ' + name).then(function () {
+    closePersonModal();
+    renderGiftAll(giftCache || []);
+    showToast('人物已增加');
+  }).catch(function (e) {
+    err.hidden = false;
+    err.textContent = '保存失败，请稍后重试';
+    console.error('[Gift] 增加人物失败', e);
+  }).then(function () { $('gPersonSave').disabled = false; });
 });
 $('personList').addEventListener('click', function (e) {
   var eb = e.target.closest('[data-gedit]');
@@ -1581,6 +1655,7 @@ $('gSave').addEventListener('click', function () {
     dir: state.fdir, amount: amount, note: $('gNote').value.trim(),
     by: session.id, byNick: displayName(), ts: new Date().toISOString()
   };
+  ensurePerson(name, $('gRel').value);
   $('gSave').disabled = true;
   $('gSave').textContent = '保存中…';
   writeGifts(function (list) {
@@ -1625,6 +1700,7 @@ $('gEditSave').addEventListener('click', function () {
     return;
   }
   var rel = $('gEditRel').value, event = $('gEditEvent').value, note = $('gEditNote').value.trim();
+  ensurePerson(name, rel);
   $('gEditSave').disabled = true;
   writeGifts(function (list) {
     return list.map(function (g) {
