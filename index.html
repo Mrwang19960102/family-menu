@@ -330,12 +330,14 @@ button { font-family: inherit; }
 .confirmMask {
   position: fixed; inset: 0;
   background: rgba(0, 0, 0, .45);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
   z-index: 60; padding: 0 40px;
+  overflow-y: auto;
 }
 .confirmMask[hidden] { display: none; }
 .confirmBox {
   width: 100%; max-width: 300px;
+  margin: 12vh 0 24px; /* 顶部锚定：键盘弹出时弹窗不上下跳 */
   background: #fff; border-radius: 16px;
   padding: 22px 20px 18px;
   box-shadow: var(--shadow-float);
@@ -1430,10 +1432,12 @@ function loadGifts(force) {
   });
 }
 function writeGifts(mutate, logText) {
+  var personsSnapshot = personCache.slice(); // 快照保护：ensurePerson 的内存改动不被重载覆盖
   return loadGifts(true).then(function (list) {
     var nl = mutate(list.slice());
-    return ghPutJson(GIFTS_FILE, { gifts: nl, persons: personCache }).then(function () {
+    return ghPutJson(GIFTS_FILE, { gifts: nl, persons: personsSnapshot }).then(function () {
       giftCache = nl;
+      personCache = personsSnapshot;
       console.log(logText);
       return nl;
     });
@@ -1652,12 +1656,12 @@ $('gAddMask').addEventListener('click', function (e) { if (e.target === $('gAddM
 $('gAddSave').addEventListener('click', function () {
   var err = $('gAddErr');
   err.hidden = true;
-  var date = $('gAddDate').value;
+  var date = $('gAddDate').value || new Date().toISOString().slice(0, 10); // 日期控件不可用时兜底今天
   var amount = parseFloat($('gAddAmount').value);
   var name = $('gAddName').value.trim();
-  if (!date || !name || !(amount > 0)) {
+  if (!name || !(amount > 0)) {
     err.hidden = false;
-    err.textContent = '请填写日期、对方姓名和大于 0 的金额';
+    err.textContent = '请填写对方姓名和大于 0 的金额';
     return;
   }
   var rel = $('gAddRel').value, event = $('gAddEvent').value, note = $('gAddNote').value.trim();
