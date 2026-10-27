@@ -367,6 +367,12 @@ button { transition: transform .1s ease, opacity .1s ease; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.err { background: rgba(196, 60, 60, .92); }
+.verPill {
+  position: fixed; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, .55); color: #fff;
+  font-size: 10px; padding: 2px 8px; border-radius: 999px;
+  z-index: 90; pointer-events: none;
+}
 
 /* ---------- 成员登录 ---------- */
 .memberRow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
@@ -778,6 +784,7 @@ button { transition: transform .1s ease, opacity .1s ease; }
   </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div class="verPill" id="verPill"></div>
 <div class="confirmMask" id="gEditMask" hidden>
   <div class="confirmBox gEditBox">
     <div class="gEditHead">
@@ -1889,7 +1896,7 @@ function applyLocalUI() {
 }
 
 /* ================= 全局操作反馈（Toast 轻提示 + 按钮加载态，v2.4） ================= */
-var APP_VER = 'v2.15';
+var APP_VER = 'v2.16';
 var toastTimer = null;
 function showToast(text, isErr) {
   var t = $('toast');
@@ -1898,18 +1905,18 @@ function showToast(text, isErr) {
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function () { t.className = 'toast'; }, 1800);
 }
-/* 微信 iOS 兼容：touchend 补偿触发（键盘弹出/收起后 click 可能丢失） */
+/* 微信 iOS 兼容：touchstart/touchend/click 三路触发 + 700ms 防抖（任一事件送达都能激活） */
 function bindTap(el, handler) {
-  var viaTouch = false;
-  el.addEventListener('touchend', function (e) {
-    viaTouch = true;
-    e.preventDefault();
+  var last = 0;
+  function run() {
+    var now = Date.now();
+    if (now - last < 700) return;
+    last = now;
     handler();
-  });
-  el.addEventListener('click', function () {
-    if (viaTouch) { viaTouch = false; return; }
-    handler();
-  });
+  }
+  el.addEventListener('touchstart', function () { run(); }, { passive: true });
+  el.addEventListener('touchend', function (e) { e.preventDefault(); run(); });
+  el.addEventListener('click', function () { run(); });
 }
 /* 键盘收起后复位 WebView 坐标，避免固定层点偏 */
 document.addEventListener('focusout', function (e) {
@@ -1921,6 +1928,7 @@ document.addEventListener('focusout', function (e) {
 /* iOS 技巧：注册空 touchstart 后 :active 按压态才生效 */
 document.addEventListener('touchstart', function () {}, { passive: true });
 $('verTag').textContent = APP_VER; // 页头常驻版本号，截图可证
+$('verPill').textContent = APP_VER; // 右下角常驻版本角标，任何截图可证
 /* ================= 个人中心 ================= */
 function renderMe() {
   var name = displayName();
