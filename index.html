@@ -74,7 +74,7 @@ button { font-family: inherit; }
 .searchWrap svg { width: 16px; height: 16px; flex: none; color: var(--c-text-3); }
 .searchWrap input {
   flex: 1; min-width: 0; border: none; outline: none; background: transparent;
-  font-size: 14px; color: var(--c-text);
+  font-size: 16px; color: var(--c-text);
 }
 .searchWrap input::placeholder { color: var(--c-text-3); }
 .searchClear {
@@ -284,7 +284,7 @@ button { font-family: inherit; }
   border: 1px solid var(--c-border);
   border-radius: 12px;
   padding: 10px 12px;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   color: var(--c-text);
   background: var(--c-bg);
@@ -316,7 +316,7 @@ button { font-family: inherit; }
 .replyInput {
   flex: 1; min-width: 0; height: 36px;
   border: 1px solid var(--c-border); border-radius: 10px;
-  padding: 0 10px; font-size: 13px;
+  padding: 0 10px; font-size: 16px;
   background: var(--c-bg); color: var(--c-text); outline: none;
 }
 .replySend {
@@ -373,7 +373,7 @@ button { font-family: inherit; }
 .authInput {
   width: 100%; height: 40px; margin-top: 10px;
   border: 1px solid var(--c-border); border-radius: 12px;
-  padding: 0 12px; font-size: 14px;
+  padding: 0 12px; font-size: 16px; /* ≥16px：防止 iOS/微信聚焦输入时整页自动放大 */
   background: var(--c-bg); color: var(--c-text); outline: none;
 }
 .authInput:focus { border-color: var(--c-primary); }
