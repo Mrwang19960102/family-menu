@@ -37,7 +37,10 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-button { font-family: inherit; }
+button { font-family: inherit; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+/* iPhone 式按压反馈：按下立即缩放+变淡，松手回弹 */
+button:active { transform: scale(.95); opacity: .85; }
+button { transition: transform .1s ease, opacity .1s ease; }
 
 /* ---------- Header ---------- */
 .header {
@@ -1886,7 +1889,7 @@ function applyLocalUI() {
 }
 
 /* ================= 全局操作反馈（Toast 轻提示 + 按钮加载态，v2.4） ================= */
-var APP_VER = 'v2.13';
+var APP_VER = 'v2.14';
 var toastTimer = null;
 function showToast(text, isErr) {
   var t = $('toast');
@@ -1915,6 +1918,8 @@ document.addEventListener('focusout', function (e) {
     setTimeout(function () { window.scrollTo(0, 0); }, 80);
   }
 });
+/* iOS 技巧：注册空 touchstart 后 :active 按压态才生效 */
+document.addEventListener('touchstart', function () {}, { passive: true });
 /* ================= 个人中心 ================= */
 function renderMe() {
   var name = displayName();
@@ -2461,6 +2466,12 @@ applyLocalUI();
 switchTab('home');
 if (!session) openNickPrompt(true); // 首次使用：设置本机昵称（可稍后再说）
 pollMessages();
+try {
+  if (sessionStorage.getItem('fm-ver-shown') !== APP_VER) { // 每次新开会话提示版本，便于确认是否拉到新版
+    sessionStorage.setItem('fm-ver-shown', APP_VER);
+    setTimeout(function () { showToast('当前版本 ' + APP_VER); }, 600);
+  }
+} catch (e) { console.error('[App] 版本提示失败', e); }
 console.log('[Menu] 初始化完成，共 ' + TOTAL + ' 道菜');
 </script>
 </body>
