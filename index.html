@@ -1633,7 +1633,7 @@ function closePersonModal() { $('gPersonMask').hidden = true; }
 $('gPersonClose').addEventListener('click', closePersonModal);
 $('gPersonCancel').addEventListener('click', closePersonModal);
 $('gPersonMask').addEventListener('click', function (e) { if (e.target === $('gPersonMask')) closePersonModal(); });
-$('gPersonSave').addEventListener('click', function () {
+function doGiftPersonSave() {
   var err = $('gPersonErr');
   err.hidden = true;
   var name = $('gPersonName').value.trim();
@@ -1655,7 +1655,8 @@ $('gPersonSave').addEventListener('click', function () {
     err.textContent = '保存失败，请稍后重试';
     console.error('[Gift] 增加人物失败', e);
   }).then(function () { $('gPersonSave').disabled = false; });
-});
+}
+bindTap($('gPersonSave'), doGiftPersonSave);
 $('personList').addEventListener('click', function (e) {
   var eb = e.target.closest('[data-gedit]');
   if (eb) { openGiftEdit(eb.getAttribute('data-gedit')); return; }
@@ -1695,7 +1696,7 @@ $('gAddDir').addEventListener('click', function (e) {
 $('gAddClose').addEventListener('click', closeGiftAdd);
 $('gAddCancel').addEventListener('click', closeGiftAdd);
 $('gAddMask').addEventListener('click', function (e) { if (e.target === $('gAddMask')) closeGiftAdd(); });
-$('gAddSave').addEventListener('click', function () {
+function doGiftAddSave() {
   var err = $('gAddErr');
   err.hidden = true;
   var date = $('gAddDate').value || new Date().toISOString().slice(0, 10); // 日期控件不可用时兜底今天
@@ -1731,7 +1732,8 @@ $('gAddSave').addEventListener('click', function () {
     showToast('保存失败，请稍后重试', true);
     console.error('[Gift] 写入失败', e);
   }).then(function () { $('gAddSave').disabled = false; });
-});
+}
+bindTap($('gAddSave'), doGiftAddSave);
 $('gEditDir').addEventListener('click', function (e) {
   var b = e.target.closest('.segBtn');
   if (!b) return;
@@ -1743,7 +1745,7 @@ $('gEditDir').addEventListener('click', function (e) {
 $('gEditClose').addEventListener('click', closeGiftEdit);
 $('gEditCancel').addEventListener('click', closeGiftEdit);
 $('gEditMask').addEventListener('click', function (e) { if (e.target === $('gEditMask')) closeGiftEdit(); });
-$('gEditSave').addEventListener('click', function () {
+function doGiftEditSave() {
   var err = $('gEditErr');
   err.hidden = true;
   var editId = state.gEditId;
@@ -1780,7 +1782,8 @@ $('gEditSave').addEventListener('click', function () {
     showToast('保存失败，请稍后重试', true);
     console.error('[Gift] 编辑写入失败', e);
   }).then(function () { $('gEditSave').disabled = false; });
-});
+}
+bindTap($('gEditSave'), doGiftEditSave);
 
 /* ================= 留言板（GitHub 云同步：仓库 messages.json 即数据库） ================= */
 // 写入令牌：fine-grained PAT，仅 family-menu 仓库 Contents 读写（与婚假旅行同款权衡：内嵌页面、泄漏影响限于该仓库数据文件）
@@ -1883,6 +1886,7 @@ function applyLocalUI() {
 }
 
 /* ================= 全局操作反馈（Toast 轻提示 + 按钮加载态，v2.4） ================= */
+var APP_VER = 'v2.13';
 var toastTimer = null;
 function showToast(text, isErr) {
   var t = $('toast');
@@ -1891,12 +1895,32 @@ function showToast(text, isErr) {
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function () { t.className = 'toast'; }, 1800);
 }
+/* 微信 iOS 兼容：touchend 补偿触发（键盘弹出/收起后 click 可能丢失） */
+function bindTap(el, handler) {
+  var viaTouch = false;
+  el.addEventListener('touchend', function (e) {
+    viaTouch = true;
+    e.preventDefault();
+    handler();
+  });
+  el.addEventListener('click', function () {
+    if (viaTouch) { viaTouch = false; return; }
+    handler();
+  });
+}
+/* 键盘收起后复位 WebView 坐标，避免固定层点偏 */
+document.addEventListener('focusout', function (e) {
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) {
+    setTimeout(function () { window.scrollTo(0, 0); }, 80);
+  }
+});
 /* ================= 个人中心 ================= */
 function renderMe() {
   var name = displayName();
   $('meAvatar').textContent = name ? name.charAt(0) : '👤';
   $('meName').textContent = name || '未设置昵称';
-  $('meMeta').textContent = name ? '本机昵称 · 无需登录' : '设置昵称后，留言与记账将显示你的名字';
+  $('meMeta').textContent = (name ? '本机昵称 · 无需登录' : '设置昵称后，留言与记账将显示你的名字') + ' · ' + APP_VER;
   $('meNickInput').value = session ? session.nick : '';
 }
 
