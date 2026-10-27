@@ -432,6 +432,14 @@ button { font-family: inherit; }
 .pRecAct { display: flex; align-items: center; gap: 6px; flex: none; }
 .pToggle { border: none; background: none; color: var(--c-primary); font-size: 12px; padding: 2px 0 0; text-align: left; font-weight: 600; }
 .pAddBtn { border: none; background: var(--c-primary-light); color: var(--c-primary); border-radius: 999px; font-size: 12px; padding: 5px 12px; font-weight: 600; flex: none; }
+.gPager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0 4px; }
+.gPagerBtn {
+  min-width: 76px; height: 34px;
+  border: 1px solid var(--c-border); background: var(--c-card);
+  border-radius: 999px; font-size: 13px; color: var(--c-text-2);
+}
+.gPagerBtn[disabled] { opacity: .45; }
+.gPagerInfo { font-size: 12px; color: var(--c-text-3); }
 .gSum { display: flex; justify-content: center; gap: 16px; margin: 4px 0 10px; }
 .gSumItem {
   flex: 1; max-width: 190px; aspect-ratio: 1 / 1;
@@ -688,6 +696,7 @@ button { font-family: inherit; }
     </div>
     <p class="kStats" style="margin-top:14px;">按人名聚合 · 点「共 n 笔 · 展开」看全部往来</p>
     <div id="personList"></div>
+    <div class="gPager" id="gPager" hidden></div>
   </section>
 
   <!-- 留言板 -->
@@ -1208,7 +1217,7 @@ var QUOTES = [
 ];
 
 /* ================= 状态 ================= */
-var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', fdir: 'out', gEditId: '', gOpen: {} };
+var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', fdir: 'out', gEditId: '', gOpen: {}, gPage: 1 };
 var pickCount = { meat: 1, veg: 1, soup: 0 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -1560,11 +1569,19 @@ function renderGiftCards(list) {
   });
   var arr = Object.keys(map).map(function (k) { return map[k]; });
   arr.sort(function (a, b) { return (b.out + b.inn) - (a.out + a.inn); });
+  var pageSize = 10;
+  var totalPages = Math.max(1, Math.ceil(arr.length / pageSize));
+  if (state.gPage > totalPages) state.gPage = totalPages;
+  if (state.gPage < 1) state.gPage = 1;
+  var pager = $('gPager');
   if (!arr.length) {
     $('personList').innerHTML = '<div class="empty"><div class="emptyEmoji">🧧</div><p>暂无往来记录</p></div>';
+    pager.hidden = true;
+    pager.innerHTML = '';
     return;
   }
-  $('personList').innerHTML = arr.map(function (p) {
+  var pageArr = arr.slice((state.gPage - 1) * pageSize, state.gPage * pageSize);
+  $('personList').innerHTML = pageArr.map(function (p) {
     p.recs.sort(function (a, b) {
       var da = a.date || '', db = b.date || '';
       if (da !== db) return da < db ? 1 : -1;
@@ -1583,6 +1600,15 @@ function renderGiftCards(list) {
       + '<span>差额 <b>' + (diff >= 0 ? '+' : '') + diff + '</b></span></div>'
       + '<div class="pRecs">' + (shown.length ? shown.map(recRowHTML).join('') : '<p class="pRecMeta">暂无往来记录，点右上「＋ 记一笔」添加份子钱</p>') + toggle + '</div></div>';
   }).join('');
+  if (totalPages > 1) {
+    pager.hidden = false;
+    pager.innerHTML = '<button class="gPagerBtn" data-gpage="prev"' + (state.gPage <= 1 ? ' disabled' : '') + '>← 上一页</button>'
+      + '<span class="gPagerInfo">第 ' + state.gPage + ' / ' + totalPages + ' 页 · 共 ' + arr.length + ' 人</span>'
+      + '<button class="gPagerBtn" data-gpage="next"' + (state.gPage >= totalPages ? ' disabled' : '') + '>下一页 →</button>';
+  } else {
+    pager.hidden = true;
+    pager.innerHTML = '';
+  }
 }
 $('gAddToggle').addEventListener('click', function () {
   openGiftAdd('', '');
@@ -1612,6 +1638,7 @@ $('gPersonSave').addEventListener('click', function () {
     return ps;
   }, '[Gift] 增加人物: ' + name).then(function () {
     closePersonModal();
+    state.gPage = 99999; // 新人物 0 记录排末尾，跳到最后一页便于查看
     renderGiftAll(giftCache || []);
     showToast('人物已增加');
   }).catch(function (e) {
@@ -1641,6 +1668,12 @@ $('personList').addEventListener('click', function (e) {
   }
   var ab = e.target.closest('[data-padd]');
   if (ab) openGiftAdd(ab.getAttribute('data-padd'), ab.getAttribute('data-prel'));
+});
+$('gPager').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-gpage]');
+  if (!b || b.disabled) return;
+  state.gPage += b.getAttribute('data-gpage') === 'prev' ? -1 : 1;
+  loadGifts(false).then(renderGiftCards);
 });
 $('gAddDir').addEventListener('click', function (e) {
   var b = e.target.closest('.segBtn');
