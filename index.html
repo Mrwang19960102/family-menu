@@ -684,28 +684,6 @@ button { font-family: inherit; }
       <button class="primaryBtn" id="gAddToggle">＋ 记一笔</button>
       <button class="ghostBtn" id="gAddPerson">＋ 增加人物</button>
     </div>
-    <div class="card" id="gForm" hidden>
-      <div class="seg" id="gFormDir" style="margin-bottom:10px;">
-        <button class="segBtn veg active" data-fdir="out">支出 · 随礼</button>
-        <button class="segBtn fav" data-fdir="in">收入 · 收礼</button>
-      </div>
-      <div class="fGrid">
-        <input type="date" class="authInput" id="gDate">
-        <input type="number" class="authInput" id="gAmount" placeholder="金额（元）" min="0" step="1">
-      </div>
-      <input type="text" class="authInput" id="gName" placeholder="对方姓名（如：表哥 王强）" list="giftNames" maxlength="20">
-      <datalist id="giftNames"></datalist>
-      <div class="fGrid">
-        <select class="authInput" id="gRel"></select>
-        <select class="authInput" id="gEvent"></select>
-      </div>
-      <input type="text" class="authInput" id="gNote" placeholder="备注（可选）" maxlength="40">
-      <div class="fGrid">
-        <button class="primaryBtn" id="gSave">保存</button>
-        <button class="ghostBtn" id="gCancel">取消</button>
-      </div>
-      <p class="msgErr" id="gErr" hidden></p>
-    </div>
     <p class="kStats" style="margin-top:14px;">按人名聚合 · 点「共 n 笔 · 展开」看全部往来</p>
     <div id="personList"></div>
   </section>
@@ -823,6 +801,34 @@ button { font-family: inherit; }
       <button class="ghostBtn" id="gPersonCancel">取消</button>
     </div>
     <p class="msgErr" id="gPersonErr" hidden></p>
+  </div>
+</div>
+<div class="confirmMask" id="gAddMask" hidden>
+  <div class="confirmBox gEditBox">
+    <div class="gEditHead">
+      <span class="cardTitle">🧧 记一笔</span>
+      <button class="sheetClose" id="gAddClose" aria-label="关闭">×</button>
+    </div>
+    <div class="seg" id="gAddDir" style="margin-bottom:10px;">
+      <button class="segBtn veg active" data-adir="out">支出 · 随礼</button>
+      <button class="segBtn fav" data-adir="in">收入 · 收礼</button>
+    </div>
+    <div class="fGrid">
+      <input type="date" class="authInput" id="gAddDate">
+      <input type="number" class="authInput" id="gAddAmount" placeholder="金额（元）" min="0" step="1">
+    </div>
+    <input type="text" class="authInput" id="gAddName" placeholder="对方姓名" list="giftNames" maxlength="20">
+    <datalist id="giftNames"></datalist>
+    <div class="fGrid">
+      <select class="authInput" id="gAddRel"></select>
+      <select class="authInput" id="gAddEvent"></select>
+    </div>
+    <input type="text" class="authInput" id="gAddNote" placeholder="备注（可选）" maxlength="40">
+    <div class="fGrid">
+      <button class="primaryBtn" id="gAddSave">保存</button>
+      <button class="ghostBtn" id="gAddCancel">取消</button>
+    </div>
+    <p class="msgErr" id="gAddErr" hidden></p>
   </div>
 </div>
 <section class="sheet" id="sheet" aria-label="做法详情">
@@ -1456,14 +1462,26 @@ function giftCanDel(g) {
 function giftCanEdit(g) {
   return !!session;
 }
-function resetGiftForm() {
-  state.gEditId = '';
-  $('gSave').textContent = '保存';
-  $('gAmount').value = '';
-  $('gName').value = '';
-  $('gNote').value = '';
-  $('gErr').hidden = true;
+/* ================= 记账悬浮窗（v2.11：人物卡与顶部记一笔统一弹窗） ================= */
+var gAddDirNow = 'out';
+function openGiftAdd(name, rel) {
+  $('gAddRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  $('gAddEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
+  $('gAddDate').value = new Date().toISOString().slice(0, 10);
+  $('gAddAmount').value = '';
+  $('gAddName').value = name || '';
+  var pr = null;
+  personCache.forEach(function (p) { if (p.name === name) pr = p; });
+  $('gAddRel').value = (pr && pr.rel) || rel || '其他';
+  $('gAddNote').value = '';
+  gAddDirNow = 'out';
+  document.querySelectorAll('#gAddDir .segBtn').forEach(function (el) {
+    el.classList.toggle('active', el.getAttribute('data-adir') === 'out');
+  });
+  $('gAddErr').hidden = true;
+  $('gAddMask').hidden = false;
 }
+function closeGiftAdd() { $('gAddMask').hidden = true; }
 /* ================= 编辑弹窗（v2.8：🖊️ 按钮唤起） ================= */
 var gEditDirNow = 'out';
 function openGiftEdit(id) {
@@ -1562,25 +1580,8 @@ function renderGiftCards(list) {
       + '<div class="pRecs">' + (shown.length ? shown.map(recRowHTML).join('') : '<p class="pRecMeta">暂无往来记录，点右上「＋ 记一笔」添加份子钱</p>') + toggle + '</div></div>';
   }).join('');
 }
-function openGiftFormWith(name, rel) {
-  resetGiftForm();
-  $('gDate').value = new Date().toISOString().slice(0, 10);
-  $('gRel').innerHTML = GIFT_REL.map(function (r) { return '<option>' + r + '</option>'; }).join('');
-  $('gEvent').innerHTML = GIFT_EVT.map(function (r) { return '<option>' + r + '</option>'; }).join('');
-  $('gName').value = name || '';
-  var pr = null;
-  personCache.forEach(function (p) { if (p.name === name) pr = p; });
-  $('gRel').value = (pr && pr.rel) || rel || '其他';
-  state.fdir = 'out';
-  document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
-    el.classList.toggle('active', el.getAttribute('data-fdir') === 'out');
-  });
-  $('gForm').hidden = false;
-  $('gForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
 $('gAddToggle').addEventListener('click', function () {
-  if (!$('gForm').hidden) { $('gForm').hidden = true; resetGiftForm(); return; }
-  openGiftFormWith('', '');
+  openGiftAdd('', '');
 });
 $('gAddPerson').addEventListener('click', function () {
   $('gPersonName').value = '';
@@ -1635,43 +1636,44 @@ $('personList').addEventListener('click', function (e) {
     return;
   }
   var ab = e.target.closest('[data-padd]');
-  if (ab) openGiftFormWith(ab.getAttribute('data-padd'), ab.getAttribute('data-prel'));
+  if (ab) openGiftAdd(ab.getAttribute('data-padd'), ab.getAttribute('data-prel'));
 });
-$('gCancel').addEventListener('click', function () { $('gForm').hidden = true; resetGiftForm(); });
-$('gFormDir').addEventListener('click', function (e) {
+$('gAddDir').addEventListener('click', function (e) {
   var b = e.target.closest('.segBtn');
   if (!b) return;
-  state.fdir = b.getAttribute('data-fdir');
-  document.querySelectorAll('#gFormDir .segBtn').forEach(function (el) {
+  gAddDirNow = b.getAttribute('data-adir');
+  document.querySelectorAll('#gAddDir .segBtn').forEach(function (el) {
     el.classList.toggle('active', el === b);
   });
 });
-$('gSave').addEventListener('click', function () {
-  var err = $('gErr');
+$('gAddClose').addEventListener('click', closeGiftAdd);
+$('gAddCancel').addEventListener('click', closeGiftAdd);
+$('gAddMask').addEventListener('click', function (e) { if (e.target === $('gAddMask')) closeGiftAdd(); });
+$('gAddSave').addEventListener('click', function () {
+  var err = $('gAddErr');
   err.hidden = true;
-  var date = $('gDate').value;
-  var amount = parseFloat($('gAmount').value);
-  var name = $('gName').value.trim();
+  var date = $('gAddDate').value;
+  var amount = parseFloat($('gAddAmount').value);
+  var name = $('gAddName').value.trim();
   if (!date || !name || !(amount > 0)) {
     err.hidden = false;
     err.textContent = '请填写日期、对方姓名和大于 0 的金额';
     return;
   }
+  var rel = $('gAddRel').value, event = $('gAddEvent').value, note = $('gAddNote').value.trim();
   var rec = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    date: date, name: name, rel: $('gRel').value, event: $('gEvent').value,
-    dir: state.fdir, amount: amount, note: $('gNote').value.trim(),
+    date: date, name: name, rel: rel, event: event,
+    dir: gAddDirNow, amount: amount, note: note,
     by: session.id, byNick: displayName(), ts: new Date().toISOString()
   };
-  ensurePerson(name, $('gRel').value);
-  $('gSave').disabled = true;
-  $('gSave').textContent = '保存中…';
+  ensurePerson(name, rel);
+  $('gAddSave').disabled = true;
   writeGifts(function (list) {
     list.unshift(rec);
     return list;
   }, '[Gift] 记账: ' + name + ' ' + rec.dir + ' ' + amount).then(function (nl) {
-    $('gForm').hidden = true;
-    resetGiftForm();
+    closeGiftAdd();
     renderGiftAll(nl);
     showToast('已记一笔');
   }).catch(function (e) {
@@ -1679,9 +1681,7 @@ $('gSave').addEventListener('click', function () {
     err.textContent = '保存失败，请稍后重试';
     showToast('保存失败，请稍后重试', true);
     console.error('[Gift] 写入失败', e);
-    $('gSave').disabled = false;
-    $('gSave').textContent = '保存';
-  });
+  }).then(function () { $('gAddSave').disabled = false; });
 });
 $('gEditDir').addEventListener('click', function (e) {
   var b = e.target.closest('.segBtn');
