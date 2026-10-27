@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#F0653A">
 <title>Song少&amp;夏夏.窝里</title>
 <style>
@@ -1217,7 +1220,7 @@ var QUOTES = [
 ];
 
 /* ================= 状态 ================= */
-var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', fdir: 'out', gEditId: '', gOpen: {}, gPage: 1 };
+var state = { tab: 'home', ktab: 'menu', group: 0, cat: 0, kw: '', temp: 'all', fdir: 'out', gEditId: '', gOpen: {}, gPage: 1, gFocus: '' };
 var pickCount = { meat: 1, veg: 1, soup: 0 };
 var results = []; // [{ dish, cat, theme }]
 
@@ -1571,6 +1574,12 @@ function renderGiftCards(list) {
   arr.sort(function (a, b) { return (b.out + b.inn) - (a.out + a.inn); });
   var pageSize = 10;
   var totalPages = Math.max(1, Math.ceil(arr.length / pageSize));
+  if (state.gFocus) {
+    var fi = -1;
+    arr.forEach(function (p, i) { if (p.name === state.gFocus) fi = i; });
+    if (fi >= 0) state.gPage = Math.floor(fi / pageSize) + 1; // 保存后跳到该人物所在页，避免「以为没保存」
+    state.gFocus = '';
+  }
   if (state.gPage > totalPages) state.gPage = totalPages;
   if (state.gPage < 1) state.gPage = 1;
   var pager = $('gPager');
@@ -1628,10 +1637,10 @@ $('gPersonSave').addEventListener('click', function () {
   var err = $('gPersonErr');
   err.hidden = true;
   var name = $('gPersonName').value.trim();
-  if (!name) { err.hidden = false; err.textContent = '请填写姓名'; return; }
+  if (!name) { err.hidden = false; err.textContent = '请填写姓名'; showToast('请填写姓名', true); return; }
   var dup = personCache.some(function (p) { return p.name === name; })
     || (giftCache || []).some(function (g) { return g.name === name; });
-  if (dup) { err.hidden = false; err.textContent = '该人物已存在，直接点人名卡上的「＋ 记一笔」即可'; return; }
+  if (dup) { err.hidden = false; err.textContent = '该人物已存在，直接点人名卡上的「＋ 记一笔」即可'; showToast('该人物已存在', true); return; }
   $('gPersonSave').disabled = true;
   writePersons(function (ps) {
     ps.push({ id: 'p' + Date.now().toString(36), name: name, rel: $('gPersonRel').value, created: new Date().toISOString() });
@@ -1695,6 +1704,7 @@ $('gAddSave').addEventListener('click', function () {
   if (!name || !(amount > 0)) {
     err.hidden = false;
     err.textContent = '请填写对方姓名和大于 0 的金额';
+    showToast('请填写对方姓名和大于 0 的金额', true);
     return;
   }
   var rel = $('gAddRel').value, event = $('gAddEvent').value, note = $('gAddNote').value.trim();
@@ -1706,11 +1716,13 @@ $('gAddSave').addEventListener('click', function () {
   };
   ensurePerson(name, rel);
   $('gAddSave').disabled = true;
+  showToast('保存中…');
   writeGifts(function (list) {
     list.unshift(rec);
     return list;
   }, '[Gift] 记账: ' + name + ' ' + rec.dir + ' ' + amount).then(function (nl) {
     closeGiftAdd();
+    state.gFocus = name;
     renderGiftAll(nl);
     showToast('已记一笔');
   }).catch(function (e) {
@@ -1742,11 +1754,13 @@ $('gEditSave').addEventListener('click', function () {
   if (!name || !(amount > 0)) {
     err.hidden = false;
     err.textContent = '请填写对方姓名和大于 0 的金额（日期可留空）';
+    showToast('请填写对方姓名和大于 0 的金额', true);
     return;
   }
   var rel = $('gEditRel').value, event = $('gEditEvent').value, note = $('gEditNote').value.trim();
   ensurePerson(name, rel);
   $('gEditSave').disabled = true;
+  showToast('保存中…');
   writeGifts(function (list) {
     return list.map(function (g) {
       if (g.id !== editId) return g;
@@ -1757,6 +1771,7 @@ $('gEditSave').addEventListener('click', function () {
     });
   }, '[Gift] 修改记录: ' + editId + ' -> ' + name + ' ' + gEditDirNow + ' ' + amount).then(function (nl) {
     closeGiftEdit();
+    state.gFocus = name;
     renderGiftAll(nl);
     showToast('修改已保存');
   }).catch(function (e) {
